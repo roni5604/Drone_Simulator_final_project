@@ -1,3 +1,4 @@
+import sys
 from enum import Enum
 
 import pygame
@@ -17,14 +18,19 @@ class PixelState(Enum):
     VISITED = 3
 
 
+def create_custom_drone(real_map, list_of_lidars_degrees):
+    drone = Drone(real_map)
+    for degree in list_of_lidars_degrees:
+        drone.add_lidar(degree)
+    return drone
+
+
 class AutoAlgo1:
     def __init__(self, real_map):
         self.map_size = 3000
         self.map = [[PixelState.UNEXPLORED for _ in range(self.map_size)] for _ in range(self.map_size)]
-        self.drone = Drone(real_map)
-        self.drone.add_lidar(0)
-        self.drone.add_lidar(90)
-        self.drone.add_lidar(-90)
+        self.drone = create_custom_drone(real_map, list_of_lidars_degrees=[0, 90, -90])
+        self.drone_number = 1
         self.points = []
         self.is_rotating = 0
         self.degrees_left = []
@@ -751,3 +757,67 @@ class AutoAlgo1:
         elif mid_point > 0:
             self.spin_by(-self.max_rotation_to_direction)
         self.move_forward(delta_time, 10)
+
+    def switch_drone(self, real_map):
+        if self.drone_number == 3:
+            self.drone_number = 1
+        else:
+            self.drone_number += 1
+
+        self.drone.stop()
+
+        if self.drone_number == 1:
+            self.drone = create_custom_drone(real_map, list_of_lidars_degrees=[0, 90, -90])
+        elif self.drone_number == 2:
+            self.drone = create_custom_drone(real_map, list_of_lidars_degrees=[0, 45, -45, 70, -70])
+        elif self.drone_number == 3:
+            self.drone = create_custom_drone(real_map, list_of_lidars_degrees=[45, -45, 90, -90, 135, -135])
+
+
+        # reset all the variables to the initial state
+        self.points = []
+        self.is_rotating = 0
+        self.degrees_left = []
+        self.degrees_left_func = []
+        self.degrees_right = []
+        self.degrees_right_func = []
+        self.is_speed_up = False
+        self.is_init = True
+        self.last_front_lidar_dis = 0
+        self.is_rotate_right = False
+        self.changed_right = 0
+        self.changed_left = 0
+        self.try_to_escape = False
+        self.left_or_right = 1
+        self.is_finish = True
+        self.is_left_right_rotation_enable = True
+        self.is_risky = False
+        self.max_risky_distance = 150
+        self.try_to_escape = False
+        self.risky_dis = 0
+        self.max_angle_risky = 10
+        self.is_lidars_max = False
+        self.save_point_after_seconds = 3
+        self.max_distance_between_points = 100
+        self.start_return_home = False
+        self.init_point = Point()
+        self.counter = 0
+        self.toogle_real_map = True
+        self.toogle_ai = False
+        self.return_home = False
+        self.last_gyro_rotation = 0
+        self.toggle_snackDriver = False
+        self.toggle_keep_right_driver = False
+
+        # reset the position of the drone and clear the map
+        self.drone_starting_point = Point(self.map_size // 2, self.map_size // 2)
+        self.map = [[PixelState.UNEXPLORED for _ in range(self.map_size)] for _ in range(self.map_size)]
+
+        # start the drone
+        self.drone.play()
+
+
+
+    # we need to compare 2 types of drones, with different lidars (number of lidars and the degrees of the lidars)
+    # we need to compare the movement of the drones, the speed of the drones,
+    # the rotation of the drones, the distance of the drones

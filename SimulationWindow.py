@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 import threading
 
@@ -5,6 +7,18 @@ from AutoAlgo1 import AutoAlgo1
 from CPU import CPU
 from Map import Map
 from Point import Point
+
+map_num = 4
+start_points = [
+    Point(100, 50),
+    Point(50, 60),
+    Point(73, 68),
+    Point(84, 73),
+    Point(92, 100)
+]
+map_path = f"Maps/p1{map_num}.png"
+
+real_map = Map(map_path, start_points[map_num - 1])
 
 
 class Button:
@@ -44,8 +58,10 @@ class SimulationWindow:
         self.initialize()
 
     def initialize(self):
+
         self.buttons = [
-            Button("Start/Pause", 1500, 600, 150, 50, self.toggle_cpu),
+            Button("Start/Pause", 1400, 600, 150, 50, self.toggle_cpu),
+            Button("SwitchDrone", 1650, 600, 150, 50, self.switch_drone),
             Button("speedUp", 1450, 100, 100, 50, self.speed_up),
             Button("speedDown", 1600, 100, 150, 50, self.speed_down),
             Button("spin180", 1420, 200, 100, 50, lambda: self.spin_by(180)),
@@ -117,17 +133,28 @@ class SimulationWindow:
         for button in self.buttons:
             button.draw(self.screen)
 
+
+    def reset_map(self):
+
+
+        # Draw the map image
+        map_image = pygame.image.load(map_path)
+        self.screen.blit(map_image, (0, 0))
+
+        # Clear the screen by filling it with the background color (optional)
+        background_color = (0, 0, 0)  # Black, or any background color of your choice
+        self.screen.fill(background_color)
+
+        # Update the display
+        pygame.display.flip()
+
+    def switch_drone(self):
+        # clean the screen and the drawing
+        self.reset_map()
+        self.algo1.switch_drone(real_map)
+
     def main(self):
-        map_num = 4
-        start_points = [
-            Point(100, 50),
-            Point(50, 60),
-            Point(73, 68),
-            Point(84, 73),
-            Point(92, 100)
-        ]
-        map_path = f"Maps/p1{map_num}.png"
-        real_map = Map(map_path, start_points[map_num - 1])
+
         self.algo1 = AutoAlgo1(real_map)
 
         painter_cpu = CPU(200, "painter")  # 60 FPS painter
