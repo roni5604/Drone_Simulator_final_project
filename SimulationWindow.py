@@ -55,33 +55,39 @@ class SimulationWindow:
         self.info_label = None
         self.toogleRealMap = True
         self.algo1 = None
+        self.alog_name = "None"
         self.initialize()
 
     def initialize(self):
 
         self.buttons = [
-            Button("Start/Pause", 1400, 600, 150, 50, self.toggle_cpu),
-            Button("SwitchDrone", 1650, 600, 150, 50, self.switch_drone),
-            Button("speedUp", 1450, 100, 100, 50, self.speed_up),
-            Button("speedDown", 1600, 100, 150, 50, self.speed_down),
-            Button("spin180", 1420, 200, 100, 50, lambda: self.spin_by(180)),
-            Button("spin90", 1550, 200, 100, 50, lambda: self.spin_by(90)),
-            Button("spin60", 1700, 200, 100, 50, lambda: self.spin_by(60)),
-            Button("spin30", 1400, 300, 100, 50, lambda: self.spin_by(30)),
-            Button("spin-30", 1500, 300, 100, 50, lambda: self.spin_by(-30)),
-            Button("spin-45", 1600, 300, 100, 50, lambda: self.spin_by(-45)),
-            Button("spin-60", 1700, 300, 100, 50, lambda: self.spin_by(-60)),
-            Button("Snack Driver", 1450, 400, 150, 50, self.toggle_snackDriver),
-            Button("toggle AI", 1650, 400, 150, 50, self.toggle_ai),
-            Button("Return Home", 1450, 500, 150, 50, self.return_home_func),
-            Button("Keep Left", 1650, 500, 150, 50, self.toggle_stay_in_middle)
+            Button("speedUp", 1450, 100, 100, 40, self.speed_up),
+            Button("speedDown", 1620, 100, 150, 40, self.speed_down),
+            Button("Snack Driver", 1450, 150, 150, 40, self.toggle_snackDriver),
+            Button("toggle AI", 1620, 150, 110, 40, self.toggle_ai),
+            Button("Return Home", 1450, 200, 150, 40, self.toggle_return_home),
+            Button("Keep Left", 1620, 200, 140, 40, self.toggle_stay_in_middle),
+            Button("SwitchDrone", 1450, 250, 150, 40, self.switch_drone),
+            Button("Start/Pause", 1620, 250, 150, 40, self.toggle_cpu),
+            Button("back", 1450, 300, 60, 40, self.return_opposite_degrees_movement),
+            Button("Restart", 1620, 300, 120, 40, self.restart)
         ]
+        # Button("spin180", 1420, 200, 100, 50, lambda: self.spin_by(180)),
+        # Button("spin90", 1550, 200, 100, 50, lambda: self.spin_by(90)),
+        # Button("spin60", 1700, 200, 100, 50, lambda: self.spin_by(60)),
+        # Button("spin30", 1400, 300, 100, 50, lambda: self.spin_by(30)),
+        # Button("spin-30", 1500, 300, 100, 50, lambda: self.spin_by(-30)),
+        # Button("spin-45", 1600, 300, 100, 50, lambda: self.spin_by(-45)),
+        # Button("spin-60", 1700, 300, 100, 50, lambda: self.spin_by(-60)),
 
         self.info_label2_rect = pygame.Rect(1450, 0, 300, 80)
 
-
         self.main()
 
+    def restart(self):
+        self.alog_name = "None"
+        self.reset_map()
+        self.algo1.reset_all()
     def toggle_cpu(self):
         if self.toogleStop:
             CPU.stop_all_cpus()
@@ -98,34 +104,42 @@ class SimulationWindow:
     def spin_by(self, degrees):
         self.algo1.spin_by(degrees)
 
+    def return_opposite_degrees_movement(self):
+        self.algo1.return_opposite_degrees_movement()
+
     def toggle_real_map(self):
         self.algo1.toogle_real_map = not self.algo1.toogle_real_map
 
     def toggle_ai(self):
+        self.alog_name = "AI"
+
         self.algo1.toogle_ai = not self.algo1.toogle_ai
 
-    def return_home_func(self):
-        self.algo1.return_home = not self.algo1.return_home
-        self.algo1.speed_down()
-        self.algo1.spin_by2(180, True, lambda: self.algo1.speed_up())
+    def toggle_return_home(self):
+        self.alog_name = "Return Home"
+
+        self.algo1.toogle_return_home = not self.algo1.toogle_return_home
 
     def open_graph(self):
         self.algo1.m_graph.draw_graph(self.screen)
 
 
     def toggle_keep_right_driver(self):
+        self.alog_name = "Keep Right"
         self.algo1.toggle_keep_right_driver = not self.algo1.toggle_keep_right_driver
 
     def toggle_snackDriver(self):
-
+        self.alog_name = "Snack Driver"
         self.algo1.toggle_snackDriver = not self.algo1.toggle_snackDriver
 
     def toggle_stay_in_middle(self):
+        self.alog_name = "Stay in Middle"
+
         self.algo1.toggle_keep_middle_driver = not self.algo1.toggle_keep_middle_driver
 
     def update_info(self, delta_time):
         font = pygame.font.Font(None, 24)
-        info_text2 = f"return home: {self.algo1.return_home} isRisky: {self.algo1.is_risky} "
+        info_text2 = f"Algorithm: {self.alog_name} isRisky: {self.algo1.is_risky} "
         text_surf2 = font.render(info_text2, True, (0, 0, 0))
         pygame.draw.rect(self.screen, (255, 255, 255), self.info_label2_rect)
         self.screen.blit(text_surf2, self.info_label2_rect.topleft)
@@ -151,6 +165,7 @@ class SimulationWindow:
     def switch_drone(self):
         # clean the screen and the drawing
         self.reset_map()
+        self.algo1.reset_all()
         self.algo1.switch_drone(real_map)
 
     def main(self):
