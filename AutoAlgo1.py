@@ -155,7 +155,7 @@ class AutoAlgo1:
         self.paint_points(screen)
         self.drone.paint(screen)
 
-    def ai(self, delta_time):
+    def ai2(self, delta_time):
         """Artificial Intelligence algorithm for navigating the drone."""
         if not self.toogle_ai:
             return
@@ -245,6 +245,37 @@ class AutoAlgo1:
                         spin_by *= -1
 
                 self.spin_by2(spin_by, True, lambda: self.reset_risk())
+
+    def ai(self, delta_time):
+        if not self.toogle_ai:
+            return
+        if self.is_init:
+            self.speed_up()
+            drone_point = self.drone.get_optical_sensor_location()
+            self.init_point = Point(drone_point.x, drone_point.y)
+            self.points.append(drone_point)
+            self.m_graph.add_vertex(drone_point)
+            self.is_init = False
+
+        if self.is_left_right_rotation_enable:
+            self.do_left_right()
+
+        drone_point = self.drone.get_optical_sensor_location()
+
+        if self.return_home:
+            self.perform_return_home(delta_time)
+        else:
+            if Tools.get_distance_between_points(self.get_last_point(),
+                                                 drone_point) >= self.max_distance_between_points:
+                self.points.append(drone_point)
+                self.m_graph.add_vertex(drone_point)
+
+        if self.is_risky:
+            self.handle_risky_situation()
+        else:
+            self.check_risk_conditions()
+
+
 
     def reset_risk(self):
         self.try_to_escape = False
@@ -750,6 +781,53 @@ class AutoAlgo1:
                         spin_by *= -1
 
                 self.spin_by2(spin_by, True, lambda: self.reset_risk())
+
+    def get_dynamic_risk_distance(self, lidar_degree):
+        """Calculate dynamic risk distance based on the lidar's relative angle to the drone's forward direction."""
+        base_risk_distance = 100  # Base risk distance for directly forward (0 degrees)
+        max_angle_variation = 90  # Maximum angle from forward at which risk distance starts to increase
+
+        # Calculate the relative angle from the drone's forward direction
+        relative_angle = abs(lidar_degree) % 360  # Normalize the angle to [0, 360]
+        if relative_angle > 180:
+            relative_angle = 360 - relative_angle  # Symmetric for backwards
+
+        # Adjust risk distance based on the angle
+        if relative_angle > max_angle_variation:
+            return base_risk_distance * 1.5  # Increase the risk distance by 50% beyond the max angle variation
+        else:
+            # Linearly decrease the risk distance as the angle approaches the max variation
+            return base_risk_distance * (1 + 0.5 * (relative_angle / max_angle_variation))
+
+    def check_risk_conditions(self):
+        """Evaluate risk based on lidar readings and their directions."""
+        self.is_risky = False
+        for lidar in self.drone.lidars:
+            dynamic_risk_distance = self.get_dynamic_risk_distance(lidar.degrees)
+            if lidar.current_distance <= dynamic_risk_distance:
+                if self.is_movement_toward_risk(lidar.degrees):
+                    self.is_risky = True
+                    break  # Immediate risk found, no need to check further
+
+    def is_movement_toward_risk(self, lidar_degree):
+        """Determine if the drone is moving towards a risk based on lidar degree."""
+        drone_direction = self.drone.get_rotation()
+        relative_angle = (lidar_degree + drone_direction) % 360
+        # Consider forward facing and peripheral angles as high risk zones
+        return 0 <= relative_angle <= 180
+
+    def handle_risky_situation(self):
+        escape_direction = None
+        max_safe_distance = 0
+
+        for lidar in self.drone.lidars:
+            dynamic_risk_distance = self.get_dynamic_risk_distance(lidar.degrees)
+            if lidar.current_distance > max_safe_distance and lidar.current_distance > dynamic_risk_distance:
+                max_safe_distance = lidar.current_distance
+                escape_direction = lidar.degrees
+
+        if escape_direction is not None:
+            self.spin_by(escape_direction)
 
     def keep_middle_movement(self, delta_time, mid_point):
         if mid_point < 0:

@@ -1,4 +1,7 @@
+
 from decimal import Decimal
+
+import math
 
 
 class Point:
@@ -12,3 +15,5 @@ class Point:
 
     def __repr__(self):
         return f"({Decimal(self.x):.3f},{Decimal(self.y):.3f})"
+
+
