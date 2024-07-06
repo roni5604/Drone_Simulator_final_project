@@ -15,7 +15,7 @@ class Drone:
         self.sensor_optical_flow = Point()
         self.lidars = []
 
-        self.speed = 0.2
+        self.speed = 0
         self.rotation = 0
         self.gyro_rotation = self.rotation
 
@@ -88,17 +88,7 @@ class Drone:
         self.gyro_rotation += rotation_changed
         self.gyro_rotation = self.format_rotation(self.gyro_rotation)
 
-    def speed_up(self, delta_time):
-        """Increase the drone's speed based on elapsed time."""
-        self.speed += (WorldParams.accelerate_per_second * delta_time / 1000.0)
-        if self.speed > WorldParams.max_speed:
-            self.speed = WorldParams.max_speed
 
-    def slow_down(self, delta_time):
-        """Decrease the drone's speed based on elapsed time."""
-        self.speed -= (WorldParams.accelerate_per_second * delta_time / 1000.0)
-        if self.speed < 0:
-            self.speed = 0
 
     def stop_flight(self):
         self.speed = 0

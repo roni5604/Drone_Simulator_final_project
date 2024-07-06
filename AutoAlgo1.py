@@ -68,11 +68,14 @@ class AutoAlgo1:
         self.toogle_real_map = True
         self.toogle_ai = False
         self.last_gyro_rotation = 0
-        self.toggle_snackDriver = False
-        self.toggle_keep_right_driver = False
-        self.toggle_keep_middle_driver = False
         self.toogle_return_home = False
         self.toogle_move = False
+        self.save_degrees = True
+        self.save_speeds = []
+        self.rotatings_speed = []
+        self.start_return_home = False
+        self.is_speed_down = False
+        self.counte_rot = 0
 
     def play(self):
         """Start the AI CPU and the drone."""
@@ -84,31 +87,28 @@ class AutoAlgo1:
         self.update_visited()
         self.update_map_by_lidars()
         self.ai(delta_time)
-        self.snake_driver(delta_time)
         self.back_home_movement(delta_time)
-        self.keep_right_driver(delta_time)  # Add this line
-        self.stay_in_middle_driver(delta_time)  # Add this line
 
-        if self.toogle_return_home:
-            if self.is_rotating != 0:
-                self.update_rotating_to_back_home(delta_time)
+        if self.is_rotating != 0:
+            self.update_rotating(delta_time)
+
+
+
+        if self.toogle_move:
             if self.is_speed_up:
-                self.drone.speed_up(delta_time)
-            else:
-                self.drone.slow_down(delta_time)
-        else:
-            if self.is_rotating != 0:
-                self.update_rotating(delta_time)
-            if self.is_speed_up:
-                self.drone.speed_up(delta_time)
-            else:
-                self.drone.slow_down(delta_time)
+                self.drone.speed = 0.2
+            if self.is_speed_down:
+                self.drone.speed = 0.2
 
     def speed_up(self):
         self.is_speed_up = True
+        self.is_speed_down = False
 
     def speed_down(self):
+        self.is_speed_down = True
         self.is_speed_up = False
+
+
 
     def update_map_by_lidars(self):
         drone_point = self.drone.get_optical_sensor_location()
@@ -173,12 +173,12 @@ class AutoAlgo1:
             return
 
         if self.is_init:
+            self.toogle_move = True
             self.speed_up()
             drone_point = self.drone.get_optical_sensor_location()
             self.init_point = Point(drone_point.x, drone_point.y)
             self.points.append(drone_point)
             self.m_graph.add_vertex(drone_point)
-            self.toogle_move = True
             self.is_init = False
 
         if self.is_left_right_rotation_enable:
@@ -233,32 +233,24 @@ class AutoAlgo1:
                     dis_to_lidar1 = Tools.get_distance_between_points(last_point, l1)
                     dis_to_lidar2 = Tools.get_distance_between_points(last_point, l2)
 
-                    if self.toogle_return_home:
-                        if Tools.get_distance_between_points(self.get_last_point(),
-                                                             drone_point) < self.max_distance_between_points:
-                            self.remove_last_point()
-                    else:
-                        if Tools.get_distance_between_points(self.get_last_point(),
-                                                             drone_point) >= self.max_distance_between_points:
-                            self.points.append(drone_point)
-                            self.m_graph.add_vertex(drone_point)
+                    if Tools.get_distance_between_points(self.get_last_point(),
+                                                         drone_point) >= self.max_distance_between_points:
+                        self.points.append(drone_point)
+                        self.m_graph.add_vertex(drone_point)
 
                     spin_by = 90
-                    if self.toogle_return_home:
-                        spin_by *= -1
-
                     if dis_to_lidar1 < dis_to_lidar2:
                         spin_by *= -1
 
                 else:
                     if a < b:
                         spin_by *= -1
-
                 self.spin_by2(spin_by, True, lambda: self.reset_risk())
 
     def reset_risk(self):
         self.try_to_escape = False
         self.is_risky = False
+        self.is_finish = True
 
     def get_last_point(self):
         if not self.points:
@@ -291,10 +283,13 @@ class AutoAlgo1:
     def spin_by2(self, degrees, is_first, func):
         self.last_gyro_rotation = self.drone.get_gyro_rotation()
         if is_first:
+
+            self.is_finish = False
             self.degrees_left.insert(0, degrees)
             self.degrees_left_func.insert(0, func)
-
+            self.save_degrees = True
         else:
+
             self.degrees_left.append(degrees)
             self.degrees_left_func.append(func)
 
@@ -316,10 +311,13 @@ class AutoAlgo1:
         """Update the rotation of the drone."""
         if not self.degrees_left:
             return
-
         degrees_left_to_rotate = self.degrees_left[0]
-        if not self.toogle_return_home:
+        if self.save_degrees:
+            print(f'move {self.counte_rot}: {degrees_left_to_rotate}')
             self.degrees_left_opposite.append(-degrees_left_to_rotate)
+            self.counte_rot += 1
+            self.save_degrees = False
+
         is_left = degrees_left_to_rotate < 0
 
         curr = self.drone.get_gyro_rotation()
@@ -337,12 +335,17 @@ class AutoAlgo1:
         self.degrees_left[0] = degrees_left_to_rotate
 
         if (is_left and degrees_left_to_rotate >= 0) or (not is_left and degrees_left_to_rotate <= 0):
+            if self.toogle_return_home:
+                self.drone.speed = 0
             self.degrees_left.pop(0)
-            func = self.degrees_left_func.pop(0)
-            if func:
-                func()
+            self.save_degrees = True
+            if self.degrees_left_func:
+                func = self.degrees_left_func.pop(0)
+                if func:
+                    func()
             if not self.degrees_left:
                 self.is_rotating = 0
+
             return
 
         direction = 1 if degrees_left_to_rotate > 0 else -1
@@ -350,443 +353,100 @@ class AutoAlgo1:
 
     ############################################################################################
     def finish_return_home(self):
-        self.toggle_return_home = not self.toogle_return_home
+        self.drone.speed = 0
+        self.toogle_return_home = not self.toogle_return_home
         self.toogle_move = False
+        print(f'Drone is back home!')
+        print(self.counte_rot)
+
+    def start_return_home_activate(self):
+        self.start_return_home = True
+        self.is_finish = True
 
     def back_home_movement(self, delta_time):
 
         if not self.toogle_return_home:
             return
+        if self.is_init and not self.save_degrees:
+            return
         if self.is_init:
-            self.degrees_right.append(180)
-            self.degrees_right_func.append(0)
-            self.is_rotating = 1
+            self.toogle_move = False
+            self.drone.speed = 0
+            self.points = []
+            self.degrees_left = []
+            self.degrees_left_func = []
+            self.save_degrees = True
+            self.is_finish = False
+            self.is_rotating = 0
+            print(f'!Start back Home!')
+            print(self.counte_rot)
+            print(len(self.save_speeds))
+            self.counte_rot = 0
+            self.spin_by_to_back_home(180, lambda: self.start_return_home_activate())
+
             self.is_init = False
 
-        drone_point = self.drone.get_optical_sensor_location()
-
-        if len(self.degrees_left_opposite) > 0:
-
+        if self.is_finish:
+            self.is_finish = False
             if len(self.degrees_left_opposite) == 1:
                 self.spin_by_to_back_home(self.degrees_left_opposite.pop(), lambda: self.finish_return_home())
-
             else:
-                self.spin_by_to_back_home(self.degrees_left_opposite.pop(), lambda: self.reset_risk())
+                self.spin_by_to_back_home(self.degrees_left_opposite.pop(), lambda: self.set_finish())
+
+        self.update_rotating_to_back_home(delta_time)
 
     def spin_by_to_back_home(self, degrees, func):
         self.last_gyro_rotation = self.drone.get_gyro_rotation()
-        self.degrees_right.append(degrees)
-        self.degrees_right_func.append(func)
-        self.is_rotating = 1
+        self.degrees_left.append(degrees)
+        self.degrees_left_func.append(func)
 
     def update_rotating_to_back_home(self, delta_time):
 
-        if not self.degrees_right:
-            self.finish_return_home()
-            return
+            if not self.degrees_left:
+                return
 
-        degrees_right_to_rotate = self.degrees_right.pop(0)
-        print(f'degree to: {degrees_right_to_rotate}')
+            degrees_left_to_rotate = self.degrees_left[0]
+            if self.start_return_home:
+                self.drone.speed = 0.2
 
-        is_left = degrees_right_to_rotate < 0
+            if self.save_degrees:
+                print(f'reverse move {self.counte_rot}: {degrees_left_to_rotate}')
+                self.save_degrees = False
+                self.counte_rot += 1
 
-        curr = self.drone.get_gyro_rotation()
+            is_left = degrees_left_to_rotate < 0
 
-        self.last_gyro_rotation = curr
-
-        if (is_left and degrees_right_to_rotate >= 0) or (not is_left and degrees_right_to_rotate <= 0):
-
-            func = self.degrees_right_func.pop(0)
-            if func:
-                func()
-            if not self.degrees_right:
-                self.is_rotating = 0
-            return
-
-        direction = 1 if degrees_right_to_rotate > 0 else -1
-        self.drone.rotate_right(delta_time * direction)
-
-    ############################################################################################
-    def snake_driver(self, delta_time):
-        if not self.toggle_snackDriver:
-            return
-
-        if self.is_init:
-            self.speed_up()
-            drone_point = self.drone.get_optical_sensor_location()
-            self.init_point = Point(drone_point.x, drone_point.y)
-            self.points.append(drone_point)
-            self.m_graph.add_vertex(drone_point)
-            self.toogle_move = True
-
-            self.is_init = False
-
-        drone_point = self.drone.get_optical_sensor_location()
-
-        if self.toogle_return_home:
-            self.perform_return_home(delta_time)
-        else:
-            if Tools.get_distance_between_points(self.get_last_point(),
-                                                 drone_point) >= self.max_distance_between_points:
-                self.points.append(drone_point)
-                self.m_graph.add_vertex(drone_point)
-
-            if not self.is_risky:
-                lidar = self.drone.lidars[0]
-                if lidar.current_distance <= self.max_risky_distance:
-                    self.is_risky = True
-                    self.risky_dis = lidar.current_distance
-
-                lidar1 = self.drone.lidars[1]
-                if lidar1.current_distance <= self.max_risky_distance / 3:
-                    self.is_risky = True
-
-                lidar2 = self.drone.lidars[2]
-                if lidar2.current_distance <= self.max_risky_distance / 3:
-                    self.is_risky = True
-
-                if not self.is_risky:
-                    self.perform_snake_movement(delta_time)
+            curr = self.drone.get_gyro_rotation()
+            just_rotated = curr - self.last_gyro_rotation
+            if is_left:
+                if just_rotated > 0:
+                    just_rotated = -(360 - just_rotated)
 
             else:
-                if not self.try_to_escape:
-                    self.try_to_escape = True
-                    lidar1 = self.drone.lidars[1]
-                    a = lidar1.current_distance
+                if just_rotated < 0:
+                    just_rotated = 360 + just_rotated
 
-                    lidar2 = self.drone.lidars[2]
-                    b = lidar2.current_distance
+            self.last_gyro_rotation = curr
+            degrees_left_to_rotate -= just_rotated
+            self.degrees_left[0] = degrees_left_to_rotate
 
-                    spin_by = self.max_angle_risky
+            if (is_left and degrees_left_to_rotate >= 0) or (not is_left and degrees_left_to_rotate <= 0):
+                self.degrees_left.pop(0)
+                self.save_degrees = True
+                if self.degrees_left_func:
+                    func = self.degrees_left_func.pop(0)
+                    if func:
+                        func()
+                if not self.degrees_left:
+                    self.is_rotating = 0
+                return
 
-                    if a > 270 and b > 270:
-                        self.is_lidars_max = True
-                        l1 = Tools.get_point_by_distance(drone_point, lidar1.degrees + self.drone.get_gyro_rotation(),
-                                                         lidar1.current_distance)
-                        l2 = Tools.get_point_by_distance(drone_point, lidar2.degrees + self.drone.get_gyro_rotation(),
-                                                         lidar2.current_distance)
-                        last_point = self.get_avg_last_point()
-                        dis_to_lidar1 = Tools.get_distance_between_points(last_point, l1)
-                        dis_to_lidar2 = Tools.get_distance_between_points(last_point, l2)
-
-                        if self.toogle_return_home:
-                            if Tools.get_distance_between_points(self.get_last_point(),
-                                                                 drone_point) < self.max_distance_between_points:
-                                self.remove_last_point()
-                        else:
-                            if Tools.get_distance_between_points(self.get_last_point(),
-                                                                 drone_point) >= self.max_distance_between_points:
-                                self.points.append(drone_point)
-                                self.m_graph.add_vertex(drone_point)
-
-                        spin_by = 90
-                        if self.toogle_return_home:
-                            spin_by *= -1
-
-                        if dis_to_lidar1 < dis_to_lidar2:
-                            spin_by *= -1
-
-                    else:
-                        if a < b:
-                            spin_by *= -1
-
-                    self.spin_by2(spin_by, True, lambda: self.reset_risk())
-
-    def perform_return_home(self, delta_time):
-        # here need to be changed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        """Handles the drone's return to home functionality."""
-        if not self.points:
-            self.drone.stop()
-            return
-
-        drone_point = self.drone.get_optical_sensor_location()
-        last_point = self.get_last_point()
-
-        if Tools.get_distance_between_points(last_point, drone_point) < 0.5:
-            self.remove_last_point()
-            if not self.points:
-                self.drone.stop()
-        else:
-            if not self.is_risky:
-                lidar = self.drone.lidars[0]
-                if lidar.current_distance <= self.max_risky_distance:
-                    self.is_risky = True
-                    self.risky_dis = lidar.current_distance
-
-                lidar1 = self.drone.lidars[1]
-                if lidar1.current_distance <= self.max_risky_distance / 3:
-                    self.is_risky = True
-
-                lidar2 = self.drone.lidars[2]
-                if lidar2.current_distance <= self.max_risky_distance / 3:
-                    self.is_risky = True
-
-                if not self.is_risky:
-                    self.move_towards_last_point(delta_time, last_point)
-                else:
-                    return
-            else:
-                if not self.try_to_escape:
-                    self.try_to_escape = True
-                    lidar1 = self.drone.lidars[1]
-                    a = lidar1.current_distance
-
-                    lidar2 = self.drone.lidars[2]
-                    b = lidar2.current_distance
-
-                    spin_by = self.max_angle_risky
-
-                    if a > 270 and b > 270:
-                        self.is_lidars_max = True
-                        l1 = Tools.get_point_by_distance(drone_point, lidar1.degrees + self.drone.get_gyro_rotation(),
-                                                         lidar1.current_distance)
-                        l2 = Tools.get_point_by_distance(drone_point, lidar2.degrees + self.drone.get_gyro_rotation(),
-                                                         lidar2.current_distance)
-                        last_point = self.get_avg_last_point()
-                        dis_to_lidar1 = Tools.get_distance_between_points(last_point, l1)
-                        dis_to_lidar2 = Tools.get_distance_between_points(last_point, l2)
-                        spin_by = 90
-                        if dis_to_lidar1 < dis_to_lidar2:
-                            spin_by *= -1
-
-                    else:
-                        if a < b:
-                            spin_by *= -1
-
-                    self.spin_by2(spin_by, True, lambda: self.reset_risk())
-                else:
-                    self.move_towards_last_point(delta_time, last_point)
-
-    def move_towards_last_point(self, delta_time, last_point):
-        """Move the drone towards the last point."""
-        drone_point = self.drone.get_optical_sensor_location()
-        angle_to_point = Tools.get_rotation_between_points(drone_point, last_point)
-
-        # Calculate the difference between the current rotation and the target angle
-        rotation_difference = angle_to_point - (self.drone.get_gyro_rotation() + 90)
-
-        # here need to be changed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-        # Rotate towards the last point using spin_by2
-        self.spin_by2(-angle_to_point, False, lambda: self.reset_risk())
-        self.move_forward(delta_time, 10)
+            direction = 1 if degrees_left_to_rotate > 0 else -1
+            self.drone.rotate_left(delta_time * direction)
 
     def move_forward(self, delta_time, distance):
         """Move the drone forward by a specified distance."""
         self.drone.speed_up(delta_time)
-
-    def perform_snake_movement(self, delta_time):
-        zigzag_angle = 10
-        zigzag_distance = 10
-        left_or_right = 1
-
-        if self.toogle_return_home:
-            zigzag_angle *= -1
-
-        self.spin_by(zigzag_angle * left_or_right)
-        left_or_right *= -1
-
-        self.move_forward(delta_time, zigzag_distance)
-
-        self.spin_by(zigzag_angle * left_or_right)
-        left_or_right *= -1
-
-        self.move_forward(delta_time, zigzag_distance)
-
-    ############################################################################################
-
-    #################### keep right driver function ##############################################
-
-    def keep_right_driver(self, delta_time):
-        if not self.toggle_keep_right_driver:
-            return
-
-        if self.is_init:
-            self.speed_up()
-            drone_point = self.drone.get_optical_sensor_location()
-            self.init_point = Point(drone_point.x, drone_point.y)
-            self.points.append(drone_point)
-            self.toogle_move = True
-            self.m_graph.add_vertex(drone_point)
-            self.is_init = False
-
-        drone_point = self.drone.get_optical_sensor_location()
-
-        if self.toogle_return_home:
-            if Tools.get_distance_between_points(self.get_last_point(), drone_point) < self.max_distance_between_points:
-                if len(self.points) <= 1 and Tools.get_distance_between_points(self.get_last_point(),
-                                                                               drone_point) < self.max_distance_between_points / 5:
-                    self.speed_down()
-                else:
-                    self.remove_last_point()
-            else:
-                if Tools.get_distance_between_points(self.get_last_point(),
-                                                     drone_point) >= self.max_distance_between_points:
-                    self.points.append(drone_point)
-                    self.m_graph.add_vertex(drone_point)
-
-        if not self.is_risky:
-            lidar = self.drone.lidars[0]
-            if lidar.current_distance <= self.max_risky_distance:
-                self.is_risky = True
-                self.risky_dis = lidar.current_distance
-
-            lidar1 = self.drone.lidars[1]
-            if lidar1.current_distance <= self.max_risky_distance / 3:
-                self.is_risky = True
-
-            lidar2 = self.drone.lidars[2]
-            if lidar2.current_distance <= self.max_risky_distance / 3:
-                self.is_risky = True
-
-            if not self.is_risky:
-                self.perform_keep_right_movement(delta_time)
-
-        else:
-            if not self.try_to_escape:
-                self.try_to_escape = True
-                lidar1 = self.drone.lidars[1]
-                a = lidar1.current_distance
-
-                lidar2 = self.drone.lidars[2]
-                b = lidar2.current_distance
-
-                spin_by = self.max_angle_risky
-
-                if a > 270 and b > 270:
-                    self.is_lidars_max = True
-                    l1 = Tools.get_point_by_distance(drone_point, lidar1.degrees + self.drone.get_gyro_rotation(),
-                                                     lidar1.current_distance)
-                    l2 = Tools.get_point_by_distance(drone_point, lidar2.degrees + self.drone.get_gyro_rotation(),
-                                                     lidar2.current_distance)
-                    last_point = self.get_avg_last_point()
-                    dis_to_lidar1 = Tools.get_distance_between_points(last_point, l1)
-                    dis_to_lidar2 = Tools.get_distance_between_points(last_point, l2)
-
-                    if self.toogle_return_home:
-                        if Tools.get_distance_between_points(self.get_last_point(),
-                                                             drone_point) < self.max_distance_between_points:
-                            self.remove_last_point()
-                    else:
-                        if Tools.get_distance_between_points(self.get_last_point(),
-                                                             drone_point) >= self.max_distance_between_points:
-                            self.points.append(drone_point)
-                            self.m_graph.add_vertex(drone_point)
-
-                    spin_by = 90
-                    if self.toogle_return_home:
-                        spin_by *= -1
-
-                    if dis_to_lidar1 < dis_to_lidar2:
-                        spin_by *= -1
-
-                else:
-                    if a < b:
-                        spin_by *= -1
-
-                self.spin_by2(spin_by, True, lambda: self.reset_risk())
-
-    def perform_keep_right_movement(self, delta_time):
-        keep_right_angle = -10
-        keep_right_distance = 10
-
-        if self.toogle_return_home:
-            keep_right_angle *= -1
-
-        self.spin_by(keep_right_angle)
-        self.move_forward(delta_time, keep_right_distance)
-
-    ############################################################################################
-
-    def stay_in_middle_driver(self, delta_time):
-        if not self.toggle_keep_middle_driver:
-            return
-
-        if self.is_init:
-            self.speed_up()
-            drone_point = self.drone.get_optical_sensor_location()
-            self.init_point = Point(drone_point.x, drone_point.y)
-            self.points.append(drone_point)
-            self.toogle_move = True
-            self.m_graph.add_vertex(drone_point)
-            self.is_init = False
-
-        drone_point = self.drone.get_optical_sensor_location()
-
-        if self.toogle_return_home:
-            if Tools.get_distance_between_points(self.get_last_point(), drone_point) < self.max_distance_between_points:
-                if len(self.points) <= 1 and Tools.get_distance_between_points(self.get_last_point(),
-                                                                               drone_point) < self.max_distance_between_points / 5:
-                    self.speed_down()
-                else:
-                    self.remove_last_point()
-            else:
-                if Tools.get_distance_between_points(self.get_last_point(),
-                                                     drone_point) >= self.max_distance_between_points:
-                    self.points.append(drone_point)
-                    self.m_graph.add_vertex(drone_point)
-
-        if not self.is_risky:
-            lidar_left = self.drone.lidars[2]
-            lidar_right = self.drone.lidars[1]
-            mid_point = (lidar_left.current_distance + lidar_right.current_distance) / 2
-
-            if lidar_left.current_distance <= self.max_risky_distance or lidar_right.current_distance <= self.max_risky_distance:
-                self.is_risky = True
-
-            else:
-                self.keep_middle_movement(delta_time, mid_point)
-
-        else:
-            if not self.try_to_escape:
-                self.try_to_escape = True
-                lidar1 = self.drone.lidars[1]
-                a = lidar1.current_distance
-
-                lidar2 = self.drone.lidars[2]
-                b = lidar2.current_distance
-
-                spin_by = self.max_angle_risky
-
-                if a > 270 and b > 270:
-                    self.is_lidars_max = True
-                    l1 = Tools.get_point_by_distance(drone_point, lidar1.degrees + self.drone.get_gyro_rotation(),
-                                                     lidar1.current_distance)
-                    l2 = Tools.get_point_by_distance(drone_point, lidar2.degrees + self.drone.get_gyro_rotation(),
-                                                     lidar2.current_distance)
-                    last_point = self.get_avg_last_point()
-                    dis_to_lidar1 = Tools.get_distance_between_points(last_point, l1)
-                    dis_to_lidar2 = Tools.get_distance_between_points(last_point, l2)
-
-                    if self.toogle_return_home:
-                        if Tools.get_distance_between_points(self.get_last_point(),
-                                                             drone_point) < self.max_distance_between_points:
-                            self.remove_last_point()
-                    else:
-                        if Tools.get_distance_between_points(self.get_last_point(),
-                                                             drone_point) >= self.max_distance_between_points:
-                            self.points.append(drone_point)
-                            self.m_graph.add_vertex(drone_point)
-
-                    spin_by = 90
-                    if self.toogle_return_home:
-                        spin_by *= -1
-
-                    if dis_to_lidar1 < dis_to_lidar2:
-                        spin_by *= -1
-
-                else:
-                    if a < b:
-                        spin_by *= -1
-
-                self.spin_by2(spin_by, True, lambda: self.reset_risk())
-
-    def keep_middle_movement(self, delta_time, mid_point):
-        if mid_point < 0:
-            self.spin_by(self.max_rotation_to_direction)
-        elif mid_point > 0:
-            self.spin_by(-self.max_rotation_to_direction)
-        self.move_forward(delta_time, 10)
 
     def reset_all(self):
         # reset all the variables to the initial state
@@ -810,7 +470,6 @@ class AutoAlgo1:
         self.is_left_right_rotation_enable = True
         self.is_risky = False
         self.max_risky_distance = 150
-        self.try_to_escape = False
         self.risky_dis = 0
         self.max_angle_risky = 10
         self.is_lidars_max = False
@@ -823,8 +482,6 @@ class AutoAlgo1:
         self.toogle_ai = False
         self.toogle_return_home = False
         self.last_gyro_rotation = 0
-        self.toggle_snackDriver = False
-        self.toggle_keep_right_driver = False
         self.toogle_return_home = False
         self.toogle_move = False
 
@@ -849,7 +506,3 @@ class AutoAlgo1:
 
         # start the drone
         self.drone.play()
-
-    # we need to compare 2 types of drones, with different lidars (number of lidars and the degrees of the lidars)
-    # we need to compare the movement of the drones, the speed of the drones,
-    # the rotation of the drones, the distance of the drones

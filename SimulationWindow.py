@@ -63,22 +63,12 @@ class SimulationWindow:
         self.buttons = [
             Button("speedUp", 1450, 100, 100, 40, self.speed_up),
             Button("speedDown", 1620, 100, 150, 40, self.speed_down),
-            Button("Snack Driver", 1450, 150, 150, 40, self.toggle_snackDriver),
             Button("toggle AI", 1620, 150, 110, 40, self.toggle_ai),
             Button("Return Home", 1450, 200, 150, 40, self.toggle_return_home),
-            Button("Keep Left", 1620, 200, 140, 40, self.toggle_stay_in_middle),
             Button("SwitchDrone", 1450, 250, 150, 40, self.switch_drone),
             Button("Start/Pause", 1620, 250, 150, 40, self.toggle_cpu),
-            Button("back", 1450, 300, 60, 40, self.return_opposite_degrees_movement),
             Button("Restart", 1620, 300, 120, 40, self.restart)
         ]
-        # Button("spin180", 1420, 200, 100, 50, lambda: self.spin_by(180)),
-        # Button("spin90", 1550, 200, 100, 50, lambda: self.spin_by(90)),
-        # Button("spin60", 1700, 200, 100, 50, lambda: self.spin_by(60)),
-        # Button("spin30", 1400, 300, 100, 50, lambda: self.spin_by(30)),
-        # Button("spin-30", 1500, 300, 100, 50, lambda: self.spin_by(-30)),
-        # Button("spin-45", 1600, 300, 100, 50, lambda: self.spin_by(-45)),
-        # Button("spin-60", 1700, 300, 100, 50, lambda: self.spin_by(-60)),
 
         self.info_label2_rect = pygame.Rect(1450, 0, 300, 80)
 
@@ -104,9 +94,6 @@ class SimulationWindow:
     def spin_by(self, degrees):
         self.algo1.spin_by(degrees)
 
-    def return_opposite_degrees_movement(self):
-        self.algo1.return_opposite_degrees_movement()
-
     def toggle_real_map(self):
         self.algo1.toogle_real_map = not self.algo1.toogle_real_map
 
@@ -123,20 +110,6 @@ class SimulationWindow:
     def open_graph(self):
         self.algo1.m_graph.draw_graph(self.screen)
 
-
-    def toggle_keep_right_driver(self):
-        self.alog_name = "Keep Right"
-        self.algo1.toggle_keep_right_driver = not self.algo1.toggle_keep_right_driver
-
-    def toggle_snackDriver(self):
-        self.alog_name = "Snack Driver"
-        self.algo1.toggle_snackDriver = not self.algo1.toggle_snackDriver
-
-    def toggle_stay_in_middle(self):
-        self.alog_name = "Stay in Middle"
-
-        self.algo1.toggle_keep_middle_driver = not self.algo1.toggle_keep_middle_driver
-
     def update_info(self, delta_time):
         font = pygame.font.Font(None, 24)
         info_text2 = f"Algorithm: {self.alog_name} isRisky: {self.algo1.is_risky} "
@@ -147,10 +120,7 @@ class SimulationWindow:
         for button in self.buttons:
             button.draw(self.screen)
 
-
     def reset_map(self):
-
-
         # Draw the map image
         map_image = pygame.image.load(map_path)
         self.screen.blit(map_image, (0, 0))
