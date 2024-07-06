@@ -70,6 +70,7 @@ class AutoAlgo1:
         self.toggle_snackDriver = False
         self.toggle_keep_right_driver = False
         self.toggle_keep_middle_driver = False
+        self.Max_Risky_Distance_by_degree = {0: 150, 90: 50, -90: 50, 180: 150, -180: 150, 45: 100, -45: 100, 60: 75, -60: 75}
 
     def play(self):
         """Start the AI CPU and the drone."""
@@ -187,61 +188,38 @@ class AutoAlgo1:
                 self.m_graph.add_vertex(drone_point)
 
         if not self.is_risky:
-
-            lidar = self.drone.lidars[0]
-            if lidar.current_distance <= self.max_risky_distance:
-                self.is_risky = True
-                self.risky_dis = lidar.current_distance
-
-            lidar1 = self.drone.lidars[1]
-            if lidar1.current_distance <= self.max_risky_distance / 3:
-                self.is_risky = True
-
-            lidar2 = self.drone.lidars[2]
-            if lidar2.current_distance <= self.max_risky_distance / 3:
-                self.is_risky = True
+            for lidar in self.drone.lidars:
+                if lidar.current_distance <= self.Max_Risky_Distance_by_degree[lidar.degrees]:
+                    self.is_risky = True
+                    self.risky_dis = lidar.current_distance
 
         else:
 
             if not self.try_to_escape:
                 self.try_to_escape = True
-                lidar1 = self.drone.lidars[1]
-                a = lidar1.current_distance
-
-                lidar2 = self.drone.lidars[2]
-                b = lidar2.current_distance
-
+                lidar_distances = [lidar.current_distance for lidar in self.drone.lidars]
                 spin_by = self.max_angle_risky
-
-                if a > 270 and b > 270:
+                if lidar_distances[1] > 270 and lidar_distances[2] > 270:
                     self.is_lidars_max = True
-                    l1 = Tools.get_point_by_distance(drone_point, lidar1.degrees + self.drone.get_gyro_rotation(),
-                                                     lidar1.current_distance)
-                    l2 = Tools.get_point_by_distance(drone_point, lidar2.degrees + self.drone.get_gyro_rotation(),
-                                                     lidar2.current_distance)
+                    l1 = Tools.get_point_by_distance(drone_point, self.drone.lidars[1].degrees + self.drone.get_gyro_rotation(),
+                                                     self.drone.lidars[1].current_distance)
+                    l2 = Tools.get_point_by_distance(drone_point, self.drone.lidars[2].degrees + self.drone.get_gyro_rotation(),
+                                                     self.drone.lidars[2].current_distance)
                     last_point = self.get_avg_last_point()
                     dis_to_lidar1 = Tools.get_distance_between_points(last_point, l1)
                     dis_to_lidar2 = Tools.get_distance_between_points(last_point, l2)
 
-                    if self.return_home:
-                        if Tools.get_distance_between_points(self.get_last_point(),
-                                                             drone_point) < self.max_distance_between_points:
-                            self.remove_last_point()
-                    else:
-                        if Tools.get_distance_between_points(self.get_last_point(),
-                                                             drone_point) >= self.max_distance_between_points:
-                            self.points.append(drone_point)
-                            self.m_graph.add_vertex(drone_point)
+                    if Tools.get_distance_between_points(self.get_last_point(), drone_point) >= self.max_distance_between_points:
+                        self.points.append(drone_point)
+                        self.m_graph.add_vertex(drone_point)
 
                     spin_by = 90
-                    if self.return_home:
-                        spin_by *= -1
 
                     if dis_to_lidar1 < dis_to_lidar2:
                         spin_by *= -1
 
                 else:
-                    if a < b:
+                    if lidar_distances[1] < lidar_distances[2]:
                         spin_by *= -1
 
                 self.spin_by2(spin_by, True, lambda: self.reset_risk())
@@ -265,8 +243,7 @@ class AutoAlgo1:
         if self.return_home:
             self.perform_return_home(delta_time)
         else:
-            if Tools.get_distance_between_points(self.get_last_point(),
-                                                 drone_point) >= self.max_distance_between_points:
+            if Tools.get_distance_between_points(self.get_last_point(), drone_point) >= self.max_distance_between_points :
                 self.points.append(drone_point)
                 self.m_graph.add_vertex(drone_point)
 
@@ -803,11 +780,9 @@ class AutoAlgo1:
         """Evaluate risk based on lidar readings and their directions."""
         self.is_risky = False
         for lidar in self.drone.lidars:
-            dynamic_risk_distance = self.get_dynamic_risk_distance(lidar.degrees)
-            if lidar.current_distance <= dynamic_risk_distance:
-                if self.is_movement_toward_risk(lidar.degrees):
-                    self.is_risky = True
-                    break  # Immediate risk found, no need to check further
+            if lidar.current_distance <= self.Max_Risky_Distance_by_degree[lidar.degrees]:
+                self.is_risky = True
+                self.risky_dis = lidar.current_distance
 
     def is_movement_toward_risk(self, lidar_degree):
         """Determine if the drone is moving towards a risk based on lidar degree."""
@@ -828,6 +803,7 @@ class AutoAlgo1:
 
         if escape_direction is not None:
             self.spin_by(escape_direction)
+        self.reset_risk()
 
     def keep_middle_movement(self, delta_time, mid_point):
         if mid_point < 0:
