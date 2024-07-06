@@ -1,3 +1,5 @@
+import math
+import random
 import sys
 from enum import Enum
 
@@ -70,7 +72,7 @@ class AutoAlgo1:
         self.toggle_snackDriver = False
         self.toggle_keep_right_driver = False
         self.toggle_keep_middle_driver = False
-        self.Max_Risky_Distance_by_degree = {0: 150, 90: 50, -90: 50, 180: 150, -180: 150, 45: 100, -45: 100, 60: 75, -60: 75}
+        self.Max_Risky_Distance_by_degree = {0: 150, 90: 50, -90: 50, 180: 150, -180: 150, 45: 100, -45: 100, 60: 75, -60: 75, 70: 85, -70: 85 ,135 : 15 , -135 : 15}
 
     def play(self):
         """Start the AI CPU and the drone."""
@@ -247,12 +249,152 @@ class AutoAlgo1:
                 self.points.append(drone_point)
                 self.m_graph.add_vertex(drone_point)
 
-        if self.is_risky:
-            self.handle_risky_situation()
+        self.handle_risky_situation()
+
+    def calculate_weight(self, angle):
+        """Calculate the weight for a given angle."""
+        max_angle = 90
+        min_weight = 0.5
+        max_weight = 1.0
+        return max_weight - (abs(angle) / max_angle) * (max_weight - min_weight)
+
+    def calculate_max_risky_distance(self, angle):
+        """Calculate the max risky distance for a given angle."""
+        max_angle = 90
+        min_distance = 50
+        max_distance = 150
+        return max_distance - (abs(angle) / max_angle) * (max_distance - min_distance)
+
+    def follow_road_center(self):
+        """Adjust the drone to follow the center of the road."""
+        lidar_distances = {lidar.degrees: lidar.current_distance for lidar in self.drone.lidars}
+
+        # Detect road edges
+        left_edge_distances = [lidar_distances.get(angle, float('inf')) for angle in [45, 60, 70, 90]]
+        right_edge_distances = [lidar_distances.get(angle, float('inf')) for angle in [-45, -60, -70, -90]]
+
+        left_edge = min(left_edge_distances)
+        right_edge = min(right_edge_distances)
+
+        # Calculate deviation from the center
+        road_width = left_edge + right_edge
+
+        if road_width == 0 or road_width == float('inf'):
+            # If road_width is zero or infinity, it means we didn't detect any edges properly
+            return 0  # Default to moving straight
+
+        deviation = (left_edge - right_edge) / road_width
+
+        # Adjust spin angle to stay centered
+        max_spin_angle = 30  # Adjust this value based on how sharply you want the drone to turn
+        spin_angle = deviation * max_spin_angle
+
+        return spin_angle
+
+    def handle_risky_situation1(self):
+        """Handle risky situations by determining the safest direction to move."""
+        lidar_distances = {lidar.degrees: lidar.current_distance for lidar in self.drone.lidars}
+        risky_lidars = [lidar for lidar in self.drone.lidars if
+                        lidar.current_distance <= self.calculate_max_risky_distance(lidar.degrees)]
+
+        if not risky_lidars:
+            self.is_risky = False
+            return
+
+        self.is_risky = True
+
+        # Calculate weighted distances
+        weighted_distances = {angle: distance * self.calculate_weight(angle) for angle, distance in
+                              lidar_distances.items()}
+
+        # Calculate forward safety
+        forward_safe_distance = weighted_distances.get(0, 0)
+
+        # Calculate left and right weighted sums including all relevant angles
+        left_weighted_sum = sum(weighted_distances.get(angle, 0) for angle in [45, 60, 70, 90])
+        right_weighted_sum = sum(weighted_distances.get(angle, 0) for angle in [-45, -60, -70, -90])
+
+        # Determine the initial spin angle based on forward path and side clearance
+        if forward_safe_distance > self.calculate_max_risky_distance(0):
+            # Forward path is clear
+            spin_angle = self.follow_road_center()
         else:
-            self.check_risk_conditions()
+            # Calculate a more precise spin angle to avoid obstacles
+            left_clearance = left_weighted_sum + forward_safe_distance
+            right_clearance = right_weighted_sum + forward_safe_distance
+            spin_angle = (left_clearance - right_clearance) / max(left_clearance, right_clearance) * 45
+
+            # Adjust spin angle based on overall safety
+            if forward_safe_distance <= self.calculate_max_risky_distance(0):
+                if all(lidar_distances.get(angle, float('inf')) < self.calculate_max_risky_distance(angle) for angle in
+                       [45, -45, 60, -60, 70, -70]):
+                    # If all forward-related angles are risky, prioritize the direction with more clearance
+                    if left_weighted_sum > right_weighted_sum:
+                        spin_angle = 90
+                    else:
+                        spin_angle = -90
+
+        # Normalize the spin angle to be within -180 to 180 degrees
+        if spin_angle > 180:
+            spin_angle -= 360
+        elif spin_angle < -180:
+            spin_angle += 360
+
+        self.spin_by2(spin_angle, True, lambda: self.reset_risk())
 
 
+    def handle_risky_situation(self):
+        """Handle risky situations by determining the safest direction to move."""
+        safe_distances = {lidar.degrees: lidar.current_distance for lidar in self.drone.lidars}
+        risky_lidars = [lidar for lidar in self.drone.lidars if
+                        lidar.current_distance <= self.Max_Risky_Distance_by_degree[lidar.degrees]]
+
+        if not risky_lidars:
+            self.is_risky = False
+            return
+
+        self.is_risky = True
+
+        # Check if the center lidar (degree 0) is risky
+        center_lidar = next((lidar for lidar in self.drone.lidars if lidar.degrees == 0), None)
+        if center_lidar and center_lidar in risky_lidars:
+            # Randomly choose to turn left or right (90 degrees)
+            spin_angle = max(safe_distances, key=safe_distances.get)
+            self.spin_by2(spin_angle, True, lambda: self.reset_risk())
+            return
+
+        # Initialize vector sums for calculating the safest direction
+        x_sum = 0
+        y_sum = 0
+
+        for lidar in self.drone.lidars:
+            if lidar.current_distance > self.Max_Risky_Distance_by_degree[lidar.degrees]:
+                # Convert polar coordinates (distance and angle) to Cartesian coordinates (x, y)
+                angle_rad = math.radians(lidar.degrees)
+                x_sum += lidar.current_distance * math.cos(angle_rad)
+                y_sum += lidar.current_distance * math.sin(angle_rad)
+
+        # Calculate the angle of the resultant vector
+        if x_sum == 0 and y_sum == 0:
+            # If no safe direction is found, spin by 180 degrees to avoid collision
+            self.spin_by2(180, True, lambda: self.reset_risk())
+            return
+
+        safe_angle = math.degrees(math.atan2(y_sum, x_sum))
+
+        current_direction = self.drone.get_rotation()  # Use get_rotation() to get the current direction
+
+        # Calculate the relative spin angle
+        spin_angle = safe_angle - current_direction
+
+        # Normalize the spin angle to be within -180 to 180 degrees
+        if spin_angle > 180:
+            spin_angle -= 360
+        elif spin_angle < -180:
+            spin_angle += 360
+
+        # Move the drone in the direction with the maximum safe distance
+        self.spin_by2(spin_angle, True, lambda: self.reset_risk())
 
     def reset_risk(self):
         self.try_to_escape = False
@@ -791,19 +933,8 @@ class AutoAlgo1:
         # Consider forward facing and peripheral angles as high risk zones
         return 0 <= relative_angle <= 180
 
-    def handle_risky_situation(self):
-        escape_direction = None
-        max_safe_distance = 0
 
-        for lidar in self.drone.lidars:
-            dynamic_risk_distance = self.get_dynamic_risk_distance(lidar.degrees)
-            if lidar.current_distance > max_safe_distance and lidar.current_distance > dynamic_risk_distance:
-                max_safe_distance = lidar.current_distance
-                escape_direction = lidar.degrees
 
-        if escape_direction is not None:
-            self.spin_by(escape_direction)
-        self.reset_risk()
 
     def keep_middle_movement(self, delta_time, mid_point):
         if mid_point < 0:
