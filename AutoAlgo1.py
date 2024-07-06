@@ -36,7 +36,7 @@ class AutoAlgo1:
         self.is_rotating = 0
         self.degrees_left = []
         self.degrees_left_func = []
-        self.degrees_left_opposite = deque()
+        self.degrees_left_opposite = []
         self.degrees_right = []
         self.degrees_right_func = []
         self.is_speed_up = False
@@ -283,10 +283,12 @@ class AutoAlgo1:
     def spin_by2(self, degrees, is_first, func):
         self.last_gyro_rotation = self.drone.get_gyro_rotation()
         if is_first:
-
-            self.is_finish = False
+            self.degrees_left_opposite[self.counte_rot -1] = - self.degrees_left[0]
+            self.degrees_left.pop(0)
             self.degrees_left.insert(0, degrees)
+            self.degrees_left_func.pop(0)
             self.degrees_left_func.insert(0, func)
+            self.is_finish = True
             self.save_degrees = True
         else:
 
