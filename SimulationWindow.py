@@ -145,7 +145,7 @@ class SimulationWindow:
         painter_cpu = CPU(200, "painter")  # 60 FPS painter
         # painter_cpu.add_function(lambda delta_time: self.screen.fill((255, 255, 255)))
         painter_cpu.add_function(lambda delta_time: self.algo1.paint(self.screen))
-        painter_cpu.add_function(lambda delta_time: pygame.display.flip())
+        # painter_cpu.add_function(lambda delta_time: pygame.display.flip())
         painter_cpu.play()
 
         self.algo1.play()
@@ -164,6 +164,12 @@ class SimulationWindow:
                     button.handle_event(event)
                 if event.type == pygame.QUIT:
                     self.running = False
+
+            # fix the loading
+            self.algo1.paint(self.screen)
+            self.update_info(0)
+            pygame.display.flip()
+            # end of fix
 
             self.clock.tick(60)
 
