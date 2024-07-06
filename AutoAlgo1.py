@@ -1,6 +1,4 @@
 import math
-import random
-import sys
 from enum import Enum
 
 import pygame
@@ -72,7 +70,8 @@ class AutoAlgo1:
         self.toggle_snackDriver = False
         self.toggle_keep_right_driver = False
         self.toggle_keep_middle_driver = False
-        self.Max_Risky_Distance_by_degree = {0: 150, 90: 50, -90: 50, 180: 150, -180: 150, 45: 100, -45: 100, 60: 75, -60: 75, 70: 85, -70: 85 ,135 : 15 , -135 : 15}
+        self.Max_Risky_Distance_by_degree = {0: 150, 90: 50, -90: 50, 180: 150, -180: 150, 45: 100, -45: 100, 60: 75,
+                                             -60: 75, 70: 85, -70: 85, 135: 15, -135: 15}
 
     def play(self):
         """Start the AI CPU and the drone."""
@@ -95,8 +94,17 @@ class AutoAlgo1:
         else:
             self.drone.slow_down(delta_time)
 
+    def reset(self, real_map):
+        self.stop()
+        self.__init__(real_map)
+
     def speed_up(self):
         self.is_speed_up = True
+
+    def stop(self):
+        """Stop all processes related to AutoAlgo1."""
+        self.ai_cpu.stop()
+        self.drone.stop()
 
     def speed_down(self):
         self.is_speed_up = False
@@ -203,15 +211,18 @@ class AutoAlgo1:
                 spin_by = self.max_angle_risky
                 if lidar_distances[1] > 270 and lidar_distances[2] > 270:
                     self.is_lidars_max = True
-                    l1 = Tools.get_point_by_distance(drone_point, self.drone.lidars[1].degrees + self.drone.get_gyro_rotation(),
+                    l1 = Tools.get_point_by_distance(drone_point,
+                                                     self.drone.lidars[1].degrees + self.drone.get_gyro_rotation(),
                                                      self.drone.lidars[1].current_distance)
-                    l2 = Tools.get_point_by_distance(drone_point, self.drone.lidars[2].degrees + self.drone.get_gyro_rotation(),
+                    l2 = Tools.get_point_by_distance(drone_point,
+                                                     self.drone.lidars[2].degrees + self.drone.get_gyro_rotation(),
                                                      self.drone.lidars[2].current_distance)
                     last_point = self.get_avg_last_point()
                     dis_to_lidar1 = Tools.get_distance_between_points(last_point, l1)
                     dis_to_lidar2 = Tools.get_distance_between_points(last_point, l2)
 
-                    if Tools.get_distance_between_points(self.get_last_point(), drone_point) >= self.max_distance_between_points:
+                    if Tools.get_distance_between_points(self.get_last_point(),
+                                                         drone_point) >= self.max_distance_between_points:
                         self.points.append(drone_point)
                         self.m_graph.add_vertex(drone_point)
 
@@ -245,7 +256,8 @@ class AutoAlgo1:
         if self.return_home:
             self.perform_return_home(delta_time)
         else:
-            if Tools.get_distance_between_points(self.get_last_point(), drone_point) >= self.max_distance_between_points :
+            if Tools.get_distance_between_points(self.get_last_point(),
+                                                 drone_point) >= self.max_distance_between_points:
                 self.points.append(drone_point)
                 self.m_graph.add_vertex(drone_point)
 
@@ -341,7 +353,6 @@ class AutoAlgo1:
             spin_angle += 360
 
         self.spin_by2(spin_angle, True, lambda: self.reset_risk())
-
 
     def handle_risky_situation(self):
         """Handle risky situations by determining the safest direction to move."""
@@ -489,7 +500,6 @@ class AutoAlgo1:
             self.degrees_right_func.append(func)
         self.is_rotating = 1
 
-
     def update_rotating_to_back_home(self, delta_time):
         if not self.degrees_right:
             return
@@ -522,13 +532,6 @@ class AutoAlgo1:
 
         direction = 1 if degrees_right_to_rotate > 0 else -1
         self.drone.rotate_right(delta_time * direction)
-
-
-
-
-
-
-
 
     ############################################################################################
     def snake_driver(self, delta_time):
@@ -933,15 +936,15 @@ class AutoAlgo1:
         # Consider forward facing and peripheral angles as high risk zones
         return 0 <= relative_angle <= 180
 
-
-
-
     def keep_middle_movement(self, delta_time, mid_point):
         if mid_point < 0:
             self.spin_by(self.max_rotation_to_direction)
         elif mid_point > 0:
             self.spin_by(-self.max_rotation_to_direction)
         self.move_forward(delta_time, 10)
+
+    def switch_map(self, real_map):
+        self.drone.real_map = real_map
 
     def switch_drone(self, real_map):
         if self.drone_number == 3:
@@ -957,7 +960,6 @@ class AutoAlgo1:
             self.drone = create_custom_drone(real_map, list_of_lidars_degrees=[0, 45, -45, 70, -70])
         elif self.drone_number == 3:
             self.drone = create_custom_drone(real_map, list_of_lidars_degrees=[45, -45, 90, -90, 135, -135])
-
 
         # reset all the variables to the initial state
         self.points = []
@@ -1000,8 +1002,6 @@ class AutoAlgo1:
 
         # start the drone
         self.drone.play()
-
-
 
     # we need to compare 2 types of drones, with different lidars (number of lidars and the degrees of the lidars)
     # we need to compare the movement of the drones, the speed of the drones,

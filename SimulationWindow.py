@@ -1,8 +1,4 @@
-import sys
-
 import pygame
-import threading
-
 from AutoAlgo1 import AutoAlgo1
 from CPU import CPU
 from Map import Map
@@ -24,12 +20,15 @@ real_map = Map(map_path, start_points[map_num - 1])
 class Button:
     def __init__(self, text, x, y, width, height, action=None):
         self.rect = pygame.Rect(x, y, width, height)
-        self.color = (200, 200, 200)
+        self.color = (200, 200, 200)  # Default color
+        self.active_color = (100, 100, 100)  # Color when active
         self.text = text
         self.action = action
+        self.is_active = False  # State tracking
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, self.rect)
+        current_color = self.active_color if self.is_active else self.color
+        pygame.draw.rect(screen, current_color, self.rect)
         font = pygame.font.Font(None, 36)
         text_surf = font.render(self.text, True, (0, 0, 0))
         text_rect = text_surf.get_rect(center=self.rect.center)
@@ -40,12 +39,16 @@ class Button:
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.collidepoint(event.pos) and self.action:
-                self.action()
+            if self.collidepoint(event.pos):
+                self.is_active = not self.is_active  # Toggle the state
+                if self.action:
+                    self.action()
 
 
 class SimulationWindow:
     def __init__(self):
+        self.buttons = None
+        self.info_label2_rect = None
         pygame.init()
         self.screen = pygame.display.set_mode((1800, 700))
         pygame.display.set_caption("Drone Simulator")
@@ -58,28 +61,16 @@ class SimulationWindow:
         self.initialize()
 
     def initialize(self):
-
         self.buttons = [
-            Button("Start/Pause", 1400, 600, 150, 50, self.toggle_cpu),
-            Button("SwitchDrone", 1650, 600, 150, 50, self.switch_drone),
-            Button("speedUp", 1450, 100, 100, 50, self.speed_up),
-            Button("speedDown", 1600, 100, 150, 50, self.speed_down),
-            Button("spin180", 1420, 200, 100, 50, lambda: self.spin_by(180)),
-            Button("spin90", 1550, 200, 100, 50, lambda: self.spin_by(90)),
-            Button("spin60", 1700, 200, 100, 50, lambda: self.spin_by(60)),
-            Button("spin30", 1400, 300, 100, 50, lambda: self.spin_by(30)),
-            Button("spin-30", 1500, 300, 100, 50, lambda: self.spin_by(-30)),
-            Button("spin-45", 1600, 300, 100, 50, lambda: self.spin_by(-45)),
-            Button("spin-60", 1700, 300, 100, 50, lambda: self.spin_by(-60)),
-            Button("Snack Driver", 1450, 400, 150, 50, self.toggle_snackDriver),
-            Button("toggle AI", 1650, 400, 150, 50, self.toggle_ai),
-            Button("Return Home", 1450, 500, 150, 50, self.return_home_func),
-            Button("Keep Left", 1650, 500, 150, 50, self.toggle_stay_in_middle)
+            Button("AI Algorithm", 1500, 100, 200, 50, self.toggle_ai),
+            Button("Snack Driver", 1500, 160, 200, 50, self.toggle_snackDriver),
+            Button("Keep Left ", 1500, 220, 200, 50, self.toggle_keep_right_driver),
+            Button("Keep Right ", 1500, 280, 200, 50, self.toggle_keep_right_driver),
+            Button("SwitchMap", 1500, 400, 200, 50, self.switch_map),
+            Button("SwitchDrone", 1500, 460, 200, 50, self.switch_drone),
+            Button("Return Home", 1500, 520, 200, 50, self.return_home_func)
         ]
-
         self.info_label2_rect = pygame.Rect(1450, 0, 300, 80)
-
-
         self.main()
 
     def toggle_cpu(self):
@@ -112,7 +103,6 @@ class SimulationWindow:
     def open_graph(self):
         self.algo1.m_graph.draw_graph(self.screen)
 
-
     def toggle_keep_right_driver(self):
         self.algo1.toggle_keep_right_driver = not self.algo1.toggle_keep_right_driver
 
@@ -125,7 +115,7 @@ class SimulationWindow:
 
     def update_info(self, delta_time):
         font = pygame.font.Font(None, 24)
-        info_text2 = f"return home: {self.algo1.return_home} isRisky: {self.algo1.is_risky} "
+        info_text2 = f"isRisky: {self.algo1.is_risky} Rotation: {self.algo1.drone.rotation} "
         text_surf2 = font.render(info_text2, True, (0, 0, 0))
         pygame.draw.rect(self.screen, (255, 255, 255), self.info_label2_rect)
         self.screen.blit(text_surf2, self.info_label2_rect.topleft)
@@ -133,9 +123,7 @@ class SimulationWindow:
         for button in self.buttons:
             button.draw(self.screen)
 
-
     def reset_map(self):
-
 
         # Draw the map image
         map_image = pygame.image.load(map_path)
@@ -152,6 +140,14 @@ class SimulationWindow:
         # clean the screen and the drawing
         self.reset_map()
         self.algo1.switch_drone(real_map)
+
+    def switch_map(self):
+        global map_num, real_map, map_path
+        map_num = (map_num % 4) + 1
+        map_path = f"Maps/p1{map_num}.png"
+        real_map = Map(map_path, start_points[map_num - 1])
+        self.reset_map()
+        self.algo1.switch_map(real_map)
 
     def main(self):
 
