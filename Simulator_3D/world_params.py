@@ -1,8 +1,8 @@
 SCREEN_WIDTH = 1000
 SCREEN_HEIGHT = 800
 
-DRONE_PICTURE = 'drone_pic.png'
-WARNING_PICTURE = 'warning.png'
+DRONE_PICTURE = 'Images/drone_pic.png'
+WARNING_PICTURE = 'Images/warning.png'
 
 APARTMENT1_FLOOR = [[1] * 20 for _ in range(20)]
 
