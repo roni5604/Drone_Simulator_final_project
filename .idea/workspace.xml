@@ -4,9 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="72cd5d53-2bbd-481d-a092-1f23edf2a36f" name="Changes" comment="BUTTONS">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Simulator_3D/drone.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_3D/drone.py" afterDir="false" />
+    <list default="true" id="72cd5d53-2bbd-481d-a092-1f23edf2a36f" name="Changes" comment="up and down Probability">
       <change beforePath="$PROJECT_DIR$/Simulator_3D/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_3D/game.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -195,7 +193,7 @@
       <workItem from="1720281427076" duration="10735000" />
       <workItem from="1720518091828" duration="319000" />
       <workItem from="1720526734078" duration="6644000" />
-      <workItem from="1720536631322" duration="1645000" />
+      <workItem from="1720536631322" duration="1964000" />
     </task>
     <task id="LOCAL-00001" summary="Ordered form for ai">
       <created>1720206606372</created>
@@ -281,7 +279,23 @@
       <option name="project" value="LOCAL" />
       <updated>1720536312105</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="dictance points">
+      <option name="closed" value="true" />
+      <created>1720538336743</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1720538336743</updated>
+    </task>
+    <task id="LOCAL-00013" summary="up and down Probability">
+      <option name="closed" value="true" />
+      <created>1720538503895</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1720538503895</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -306,12 +320,14 @@
     <MESSAGE value="depth" />
     <MESSAGE value="remove key" />
     <MESSAGE value="BUTTONS" />
-    <option name="LAST_COMMIT_MESSAGE" value="BUTTONS" />
+    <MESSAGE value="dictance points" />
+    <MESSAGE value="up and down Probability" />
+    <option name="LAST_COMMIT_MESSAGE" value="up and down Probability" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$Graph.coverage" NAME="Graph Coverage Results" MODIFIED="1720189553375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$SimulationWindow.coverage" NAME="SimulationWindow Coverage Results" MODIFIED="1720518334249" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Drone_Simulator_final_project$main.coverage" NAME="main Coverage Results" MODIFIED="1720538276233" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Simulator_3D" />
+    <SUITE FILE_PATH="coverage/Drone_Simulator_final_project$main.coverage" NAME="main Coverage Results" MODIFIED="1720538595280" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Simulator_3D" />
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$AutoAlgo1.coverage" NAME="AutoAlgo1 Coverage Results" MODIFIED="1720202279994" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

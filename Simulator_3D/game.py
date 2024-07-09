@@ -13,7 +13,8 @@ GRAY = (128, 128, 128)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
-YELLOW = (255, 255, 0)
+BROWN = (101, 67, 33)
+
 class Game:
     def __init__(self): # Initialize the game
         pygame.init() # Initialize pygame
@@ -62,7 +63,7 @@ class Game:
         - map_x: The x-coordinate in the map corresponding to the target_x.
         - map_y: The y-coordinate in the map corresponding to the target_y.
         - current_map: The map layer the drone is currently on.
-        - color: The color of the wall to be drawn (blue for layer 1, gray for layer 2).
+        - color: The color of the wall to be drawn (brown for layer 1, gray for layer 2).
         - wall_height: The height of the wall to be drawn, inversely proportional to the depth.
         - ceiling_height: The height of the ceiling to be drawn, inversely proportional to the depth.
 
@@ -86,7 +87,7 @@ class Game:
                     current_map = APARTMENT2_WALLS
 
                 if current_map[map_y][map_x] == 1:
-                    color = BLUE if self.drone.current_layer == 1 else GRAY
+                    color = BROWN if self.drone.current_layer == 1 else GRAY
                     wall_height = SCREEN_HEIGHT / (depth * 0.05)
                     ceiling_height = -SCREEN_HEIGHT / (depth * 0.05)  # Ceiling height
                     pygame.draw.rect(self.screen, color, (
@@ -472,7 +473,7 @@ class Game:
                 for x in range(20):
                     color = (0, 0, 0)
                     if APARTMENT1_WALLS[y][x] == 1 or APARTMENT2_WALLS[y][x] == 1:
-                        color = BLUE if self.drone.current_layer == 1 else GRAY
+                        color = BROWN if self.drone.current_layer == 1 else GRAY
                     if self.drone.current_layer == 1:
                         if (y, x) in self.drone.visited_positions_1:
                             color = RED
@@ -485,7 +486,7 @@ class Game:
                             color = GREEN
                     if self.do_return:
                         if (y, x) == self.drone.current_point:
-                            color = YELLOW
+                            color = BLUE
 
                     pygame.draw.rect(self.screen, color, (
                         MINIMAP_OFFSET_X + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,
@@ -496,7 +497,7 @@ class Game:
                 self.map.height * MINIMAP_SCALE + 10), 2)
             for y in range(20):
                 for x in range(20):
-                    color = BLUE if self.drone.current_layer == 1 else GRAY
+                    color = BROWN if self.drone.current_layer == 1 else GRAY
                     if APARTMENT2_FLOOR[y][x] == 2:
                         color = BLACK
                     if (y, x) == self.drone.current_point:
