@@ -176,7 +176,7 @@ class Game:
             target_y = self.drone.y + math.sin(angle_up) * depth
             map_x = int(target_x / self.map.scale)
             map_y = int(target_y / self.map.scale)
-            if map_x < 0 or map_x < 20 or map_y < 0 or map_y < 0:
+            if map_x < 0 or map_x < 20 or map_y > 20 or map_y < 0:
                 break
             if self.drone.current_layer == 1 and APARTMENT2_FLOOR[map_y][map_x] == 1:
                 if depth < 1:
@@ -193,7 +193,7 @@ class Game:
             target_y = self.drone.y + math.sin(angle_down) * depth
             map_x = int(target_x / self.map.scale)
             map_y = int(target_y / self.map.scale)
-            if map_x < 0 or map_x < 20 or map_y < 0 or map_y < 0:
+            if map_x < 0 or map_x < 20 or map_y > 20 or map_y < 0:
                 break
             if self.drone.current_layer == 1 and APARTMENT1_FLOOR[map_y][map_x] == 1:
                 if depth < 1:
