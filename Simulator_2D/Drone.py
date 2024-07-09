@@ -15,7 +15,7 @@ class Drone:
         self.sensor_optical_flow = Point()
         self.lidars = []
 
-        self.speed = 0.5
+        self.speed = 0
         self.rotation = 0
         self.gyro_rotation = self.rotation
 
