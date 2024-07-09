@@ -30,16 +30,52 @@ class Drone:
         self.current_map = []
 
     def format_rotation(self, rotation_value):
+        """
+    Formats the rotation value to ensure it is within the range of 0 to 359 degrees.
+
+    This function takes an angle in degrees and adjusts it to ensure it falls within the standard 360-degree circle.
+    If the angle is negative, it adjusts it to the corresponding positive angle.
+
+    Parameters:
+    - rotation_value (float): The rotation angle in degrees.
+
+    Returns:
+    - float: The formatted rotation angle within the range [0, 359].
+    """
         rotation_value %= 360
         if rotation_value < 0:
             rotation_value = 360 + rotation_value
         return rotation_value
 
     def rotate_image(self, angle):
+        """
+    Rotates the drone's image to the specified angle and returns the rotated image and its new rectangle.
+
+    This function uses the Pygame library to rotate the drone's image by a specified angle. It also adjusts the
+    rectangle of the rotated image to keep it centered on the screen, accounting for the drone's vertical position.
+
+    Parameters:
+    - angle (float): The angle in degrees to rotate the image.
+
+    Returns:
+    - tuple: A tuple containing the rotated image (pygame.Surface) and its new rectangle (pygame.Rect).
+    """
         rotated_image = pygame.transform.rotozoom(self.image, -angle, 1)
         rotated_rect = rotated_image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + int(self.z * 20)))
         return rotated_image, rotated_rect
 
     def draw(self, screen):
+        """
+    Draws the drone on the screen.
+
+    This function rotates the drone's image based on its current gyro angle and blits the rotated image onto
+    the provided screen at the appropriate location.
+
+    Parameters:
+    - screen (pygame.Surface): The Pygame surface to draw the drone on.
+
+    Returns:
+    None
+    """
         rotated_drone, rotated_rect = self.rotate_image(self.gyro_angle)
         screen.blit(rotated_drone, rotated_rect.topleft)

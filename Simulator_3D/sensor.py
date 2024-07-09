@@ -3,6 +3,23 @@ import math
 from world_params import *
 
 class Sensor:
+    """
+    Initializes the Sensor class with a reference to the drone and sensor configurations.
+
+    This constructor sets up the sensor configurations, including angles for different sensor setups and up/down sensors.
+
+    Parameters:
+    - drone (Drone): The drone instance to which the sensors are attached.
+
+    Attributes:
+    - drone (Drone): Reference to the drone instance.
+    - configs (list of list of int): A list of sensor angle configurations.
+    - up_down_sensors (list of int): Angles for up and down sensors.
+    - current_config (int): Index of the current sensor configuration in use.
+    
+    Returns:
+    None
+    """
     def __init__(self, drone):
         self.drone = drone
         self.configs = [
@@ -14,6 +31,18 @@ class Sensor:
         self.current_config = 0
 
     def draw(self, screen):
+        """
+        Draws the sensor lines on the screen based on the current sensor configuration and the drone's position.
+
+        This function visualizes the sensors by drawing lines from the drone's position in the directions specified by the
+        sensor angles. It checks for obstacles and stops the line when an obstacle is detected.
+
+        Parameters:
+        - screen (pygame.Surface): The Pygame surface to draw the sensors on.
+
+        Returns:
+        None
+        """
         sensor_angles = self.configs[self.current_config]
         for sensor_angle in sensor_angles:
             angle = math.radians(self.drone.gyro_angle + sensor_angle)
