@@ -7,6 +7,13 @@ from map import Map
 from button import Button
 from world_params import *
 
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+GRAY = (128, 128, 128)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+
 class Game:
     def __init__(self): # Initialize the game
         pygame.init() # Initialize pygame
@@ -18,9 +25,12 @@ class Game:
         self.drone = Drone() # Create the drone
         self.sensor = Sensor(self.drone) # Create the sensor
         self.map = Map() # Create the map
-        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 120, 190, 50) # Create the self-driving button
-        self.button_return = Button('Return Home', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 190, 190, 50) # Create the return home button
-        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 50, 190, 50) # Create the switch sensors button
+        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 120, 190, 50) # Create the
+        # self-driving button
+        self.button_return = Button('Return Home', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 190, 190, 50) # Create the
+        # return home button
+        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 50, 190, 50) # Create the
+        # switch sensors button
         self.do_ai = False # Set the self-driving mode to False
         self.do_return = False # Set the return home mode to False
 
@@ -344,6 +354,7 @@ class Game:
                 self.drone.moving = False
                 self.drone.return_home_speed = []
                 self.drone.return_home_angle = []
+                self.button_sensors.color = WHITE
                 self.do_return = False
             return
 
@@ -417,12 +428,20 @@ class Game:
                     mouse_x, mouse_y = event.pos
                     if self.button_sensors.rect.collidepoint(mouse_x, mouse_y):
                         self.sensor.current_config = (self.sensor.current_config + 1) % len(self.sensor.configs)
+                        self.button_sensors.color = GRAY
                     if self.button_ai.rect.collidepoint(mouse_x, mouse_y):
                         self.do_ai = True
                         self.do_return = False
+                        self.button_ai.color = GRAY
+                        self.button_return.color = WHITE
+                        self.button_sensors.color = WHITE
+
                     if self.button_return.rect.collidepoint(mouse_x, mouse_y):
                         self.do_return = True
                         self.do_ai = False
+                        self.button_ai.color = WHITE
+                        self.button_return.color = GRAY
+                        self.button_sensors.color = WHITE
 
             self.drone.angle = math.radians(self.drone.gyro_angle)
 
@@ -478,5 +497,6 @@ class Game:
 
             pygame.display.flip()
             self.clock.tick(30)
+            self.button_sensors.color = WHITE
 
         pygame.quit()

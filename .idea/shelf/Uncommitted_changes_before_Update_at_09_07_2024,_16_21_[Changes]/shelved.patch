@@ -1,0 +1,231 @@
+Index: Simulator_3D/game.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import pygame\nimport math\nimport random\nfrom drone import Drone\nfrom sensor import Sensor\nfrom map import Map\nfrom button import Button\nfrom world_params import *\n\nclass Game:\n    def __init__(self):\n        pygame.init()\n        pygame.font.init()\n        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))\n        pygame.display.set_caption(\"3D Drone Simulation\")\n        self.clock = pygame.time.Clock()\n        self.running = True\n        self.drone = Drone()\n        self.sensor = Sensor(self.drone)\n        self.map = Map()\n        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 120, 190, 50)\n        self.button_return = Button('Return Home', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 190, 190, 50)\n        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 50, 190, 50)\n        self.do_ai = False\n        self.do_return = False\n\n    def cast_rays(self):\n        ray_angle = self.drone.angle - math.pi / 6  # Start angle for the field of view\n        for ray in range(120):\n            ray_angle += math.pi / 180  # Increment the angle for each ray\n            for depth in range(1, 200):\n                target_x = self.drone.x + math.cos(ray_angle) * depth\n                target_y = self.drone.y + math.sin(ray_angle) * depth\n                map_x = int(target_x / self.map.scale)\n                map_y = int(target_y / self.map.scale)\n\n                if self.drone.current_layer == 1:\n                    current_map = APARTMENT1_WALLS\n                elif self.drone.current_layer == 2:\n                    current_map = APARTMENT2_WALLS\n\n                if current_map[map_y][map_x] == 1:\n                    color = (0, 0, 255) if self.drone.current_layer == 1 else (0, 255, 0)\n                    wall_height = SCREEN_HEIGHT / (depth * 0.05)\n                    ceiling_height = -SCREEN_HEIGHT / (depth * 0.05)  # Ceiling height\n                    pygame.draw.rect(self.screen, color, (\n                        ray * (SCREEN_WIDTH // 120), (SCREEN_HEIGHT / 2) - wall_height / 2, SCREEN_WIDTH // 120, wall_height))\n                    pygame.draw.rect(self.screen, color, (\n                        ray * (SCREEN_WIDTH // 120), (SCREEN_HEIGHT / 2) - wall_height / 2 - ceiling_height,\n                        SCREEN_WIDTH // 120, ceiling_height))\n                    break\n\n    def calculate_risky(self):\n        sensor_angles = self.sensor.configs[self.sensor.current_config]\n        sensor_risky = {}\n        for sensor_angle in sensor_angles:\n            angle = math.radians(self.drone.gyro_angle + sensor_angle)\n            for depth in range(1, 800):\n                target_x = self.drone.x + math.cos(angle) * depth\n                target_y = self.drone.y + math.sin(angle) * depth\n                map_x = int(target_x / self.map.scale)\n                map_y = int(target_y / self.map.scale)\n                if self.drone.current_layer == 1:\n                    current_map = APARTMENT1_WALLS\n                elif self.drone.current_layer == 2:\n                    current_map = APARTMENT2_WALLS\n                if current_map[map_y][map_x] == 1:\n                    if depth < self.drone.dangerous_distance:\n                        sensor_risky[sensor_angle] = depth\n                        self.screen.blit(self.drone.warning_light_img, (10, 80))\n                    break\n        return sensor_risky\n\n    def calculate_risky_up_down(self):\n        # Calculate risk upwards\n        angle_up = math.radians(self.drone.angle + self.sensor.up_down_sensors[0])\n        for depth in range(1, 800):\n            target_x = self.drone.x + math.cos(angle_up) * depth\n            target_y = self.drone.y + math.sin(angle_up) * depth\n            map_x = int(target_x / self.map.scale)\n            map_y = int(target_y / self.map.scale)\n            if map_x < 0 or map_x < 20 or map_y < 0 or map_y < 0:\n                break\n            if self.drone.current_layer == 1 and APARTMENT2_FLOOR[map_y][map_x] == 1:\n                if depth < 1:\n                    self.screen.blit(self.drone.warning_light_img, (10, 80))\n                    break\n            if self.drone.current_layer == 2 and CEILING2_MAP[map_y][map_x] == 1:\n                if depth < 1:\n                    self.screen.blit(self.drone.warning_light_img, (10, 80))\n                    break\n        # Calculate risk downwards\n        angle_down = math.radians(self.drone.angle + self.sensor.up_down_sensors[1])\n        for depth in range(1, 800):\n            target_x = self.drone.x + math.cos(angle_down) * depth\n            target_y = self.drone.y + math.sin(angle_down) * depth\n            map_x = int(target_x / self.map.scale)\n            map_y = int(target_y / self.map.scale)\n            if map_x < 0 or map_x < 20 or map_y < 0 or map_y < 0:\n                break\n            if self.drone.current_layer == 1 and APARTMENT1_FLOOR[map_y][map_x] == 1:\n                if depth < 1:\n                    self.screen.blit(self.drone.warning_light_img, (10, 80))\n                    break\n            if self.drone.current_layer == 2 and APARTMENT2_FLOOR[map_y][map_x] == 1:\n                if depth < 1:\n                    self.screen.blit(self.drone.warning_light_img, (10, 80))\n                    break\n\n    def autonomous_movement(self):\n        if not self.do_ai:\n            return\n        if not self.drone.move_floor:\n            sensor_readings = self.calculate_risky()\n            # Determine movement based on sensor readings\n            if sensor_readings:\n                self.drone.moving = False\n                self.drone.speed = 0\n                self.drone.return_home_speed.append(0)\n                min_sensor_dist = min(sensor_readings.values())\n                degree = 0\n                for sensor_angle in sensor_readings:\n                    if sensor_readings[sensor_angle] == min_sensor_dist:\n                        degree = sensor_angle\n                if degree < 0:  # Closer to left wall\n                    self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 1)  # Rotate right\n                else:  # Closer to right wall\n                    self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle - 1)  # Rotate left\n\n            else:\n                self.drone.moving = True\n\n            if self.drone.moving:\n                self.drone.speed = 2\n                if self.drone.timing_change == 30:\n                    self.drone.right_left *= -1\n                    self.drone.timing_change = 0\n                self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 0.5 * self.drone.right_left)\n                self.drone.return_home_speed.append(2)\n                self.drone.timing_change += 1\n                self.drone.angle = math.radians(self.drone.gyro_angle)\n                new_x = self.drone.x + math.cos(self.drone.angle) * self.drone.speed\n                new_y = self.drone.y + math.sin(self.drone.angle) * self.drone.speed\n                if self.drone.current_layer == 1:\n                    self.drone.current_map = APARTMENT1_WALLS\n                elif self.drone.current_layer == 2:\n                    self.drone.current_map = APARTMENT2_WALLS\n\n                if self.drone.current_map[int(new_y / self.map.scale)][int(new_x / self.map.scale)] in [0]:  # Allow passage through holes\n                    self.drone.x, self.drone.y = new_x, new_y\n                    self.drone.current_point = (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale))\n                    if self.drone.current_layer == 1:\n                        self.drone.visited_positions_1.add((int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))\n                    elif self.drone.current_layer == 2:\n                        self.drone.visited_positions_2.add((int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))\n        # Autonomous height movement\n        if self.drone.move_floor or random.random() < 0.005:\n            if self.drone.current_layer == 1:\n                if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:\n                    self.drone.moving = False\n                    self.drone.speed = 0\n                    self.drone.move_floor = True\n                    if self.drone.z >= -10:\n                        self.drone.return_home_speed.append(-1)\n                        self.drone.z -= 0.5\n                    else:\n                        self.drone.return_home_speed.append(-2)\n                        self.drone.z = 1.5\n                        self.drone.current_layer = 2\n                        self.drone.move_floor = False\n                        self.drone.moving = True\n\n            elif self.drone.current_layer == 2:\n                if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:\n                    self.drone.moving = False\n                    self.drone.speed = 0\n                    self.drone.move_floor = True\n                    if self.drone.z <= 10:\n                        self.drone.return_home_speed.append(-3)\n\n                        self.drone.z += 0.5\n                    else:\n                        self.drone.return_home_speed.append(-4)\n                        self.drone.z = -1.5\n                        self.drone.current_layer = 1\n                        self.drone.move_floor = False\n                        self.drone.moving = True\n        if self.drone.gyro_angle >= 180:\n            self.drone.return_home_angle.append(self.drone.gyro_angle - 180)\n        else:\n            self.drone.return_home_angle.append(self.drone.gyro_angle + 180)\n\n    def return_home_movement(self):\n        if not self.do_return:\n            return\n        if not self.drone.return_home_angle or not self.drone.return_home_speed:\n            self.drone.moving = False\n            self.drone.return_home_speed = []\n            self.drone.return_home_angle = []\n            self.do_return = False\n            return\n\n        while self.drone.spin_back < 180:\n            self.drone.speed = 0\n            self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 2)\n            self.drone.spin_back += 2\n            return\n        pop_speed = self.drone.return_home_speed.pop()\n        if pop_speed == 0:\n            self.drone.speed = 0\n            self.drone.gyro_angle = self.drone.return_home_angle.pop()\n        elif pop_speed == 2:\n            self.drone.gyro_angle = self.drone.return_home_angle.pop()\n            self.drone.speed = 2\n            new_x = self.drone.x + math.cos(self.drone.angle) * self.drone.speed\n            new_y = self.drone.y + math.sin(self.drone.angle) * self.drone.speed\n            self.drone.x, self.drone.y = new_x, new_y\n            self.drone.current_point = (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale))\n        elif pop_speed == -1:\n            self.drone.speed = 0\n            if self.drone.z <= 10:\n                self.drone.z += 0.5\n        elif pop_speed == -2:\n            self.drone.z = 1.5\n            self.drone.current_layer = 1\n            self.drone.current_map = APARTMENT1_WALLS\n\n        elif pop_speed == -3:\n            self.drone.speed = 0\n            if self.drone.z >= -10:\n                self.drone.z -= 0.5\n        elif pop_speed == -4:\n            self.drone.z = 1.5\n            self.drone.current_map = APARTMENT2_WALLS\n            self.drone.current_layer = 2\n\n    def run(self):\n        MINIMAP_SCALE = 4\n        MINIMAP_OFFSET_X = SCREEN_WIDTH - self.map.width * MINIMAP_SCALE - 10\n        MINIMAP_OFFSET_Y = 10\n\n        while self.running:\n            for event in pygame.event.get():\n                if event.type == pygame.QUIT:\n                    self.running = False\n                if event.type == pygame.MOUSEBUTTONDOWN:\n                    mouse_x, mouse_y = event.pos\n                    if self.button_sensors.rect.collidepoint(mouse_x, mouse_y):\n                        self.sensor.current_config = (self.sensor.current_config + 1) % len(self.sensor.configs)\n                    if self.button_ai.rect.collidepoint(mouse_x, mouse_y):\n                        self.do_ai = True\n                        self.do_return = False\n                    if self.button_return.rect.collidepoint(mouse_x, mouse_y):\n                        self.do_return = True\n                        self.do_ai = False\n\n            keys = pygame.key.get_pressed()\n            if keys[pygame.K_LEFT]:\n                self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle - 1)\n            if keys[pygame.K_RIGHT]:\n                self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 1)\n            self.drone.angle = math.radians(self.drone.gyro_angle)\n\n            if keys[pygame.K_SPACE]:\n                self.drone.moving = not self.drone.moving\n\n            self.autonomous_movement()\n            self.return_home_movement()\n\n            self.screen.fill((0, 0, 0))\n            self.cast_rays()\n            self.sensor.draw(self.screen)\n            self.calculate_risky_up_down()\n            self.calculate_risky()\n            self.drone.draw(self.screen)\n\n            self.button_sensors.draw(self.screen)\n            self.button_ai.draw(self.screen)\n            self.button_return.draw(self.screen)\n\n            pygame.draw.rect(self.screen, (255, 255, 255), (\n                MINIMAP_OFFSET_X - 5, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,\n                self.map.height * MINIMAP_SCALE + 10), 2)\n            for y in range(20):\n                for x in range(20):\n                    color = (0, 0, 0)\n                    if APARTMENT1_WALLS[y][x] == 1 or APARTMENT2_WALLS[y][x] == 1:\n                        color = (0, 0, 255) if self.drone.current_layer == 1 else (0, 255, 0)\n                    if self.drone.current_layer == 1:\n                        if (y, x) in self.drone.visited_positions_1:\n                            color = (255, 0, 0)\n                    if self.drone.current_layer == 2:\n                        if (y, x) in self.drone.visited_positions_2:\n                            color = (255, 0, 0)\n                    if self.do_return:\n                        if (y, x) == self.drone.current_point:\n                            color = (128, 128, 128)\n\n                    pygame.draw.rect(self.screen, color, (\n                        MINIMAP_OFFSET_X + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,\n                        MINIMAP_SCALE))\n\n            pygame.draw.rect(self.screen, (255, 255, 255), (\n                MINIMAP_OFFSET_X - 105, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,\n                self.map.height * MINIMAP_SCALE + 10), 2)\n            for y in range(20):\n                for x in range(20):\n                    color = (0, 0, 255) if self.drone.current_layer == 1 else (0, 255, 0)\n                    if APARTMENT2_FLOOR[y][x] == 2:\n                        color = (0, 0, 0)\n                    if (y, x) == self.drone.current_point:\n                        color = (255, 0, 0)\n                    pygame.draw.rect(self.screen, color, (\n                        MINIMAP_OFFSET_X - 100 + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,\n                        MINIMAP_SCALE))\n\n            pygame.display.flip()\n            self.clock.tick(30)\n\n        pygame.quit()\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/Simulator_3D/game.py b/Simulator_3D/game.py
+--- a/Simulator_3D/game.py	(revision a3be7011276a949b77d088ee13b0225ceab00851)
++++ b/Simulator_3D/game.py	(date 1720531303389)
+@@ -55,7 +55,7 @@
+         sensor_risky = {}
+         for sensor_angle in sensor_angles:
+             angle = math.radians(self.drone.gyro_angle + sensor_angle)
+-            for depth in range(1, 800):
++            for depth in range(1, 200):
+                 target_x = self.drone.x + math.cos(angle) * depth
+                 target_y = self.drone.y + math.sin(angle) * depth
+                 map_x = int(target_x / self.map.scale)
+@@ -74,7 +74,7 @@
+     def calculate_risky_up_down(self):
+         # Calculate risk upwards
+         angle_up = math.radians(self.drone.angle + self.sensor.up_down_sensors[0])
+-        for depth in range(1, 800):
++        for depth in range(1, 200):
+             target_x = self.drone.x + math.cos(angle_up) * depth
+             target_y = self.drone.y + math.sin(angle_up) * depth
+             map_x = int(target_x / self.map.scale)
+@@ -91,7 +91,7 @@
+                     break
+         # Calculate risk downwards
+         angle_down = math.radians(self.drone.angle + self.sensor.up_down_sensors[1])
+-        for depth in range(1, 800):
++        for depth in range(1, 200):
+             target_x = self.drone.x + math.cos(angle_down) * depth
+             target_y = self.drone.y + math.sin(angle_down) * depth
+             map_x = int(target_x / self.map.scale)
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"AutoImportSettings\">\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\n  </component>\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"72cd5d53-2bbd-481d-a092-1f23edf2a36f\" name=\"Changes\" comment=\"Arranging the screen and switching between maps\">\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/AutoAlgo1.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/AutoAlgo1.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/CPU.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/CPU.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Drone.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Drone.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Graph.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Graph.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Lidar.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Lidar.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Map.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Map.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Maps/drone_3_pixels.png\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Maps/drone_3_pixels.png\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Maps/p11.png\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Maps/p11.png\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Maps/p12.png\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Maps/p12.png\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Maps/p13.png\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Maps/p13.png\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Maps/p14.png\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Maps/p14.png\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Maps/p15.png\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Maps/p15.png\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Maps/scaled_p14.png\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Maps/scaled_p14.png\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Painter.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Painter.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Point.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Point.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/README.md\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/README.md\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/SimulationWindow.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/SimulationWindow.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/Tools.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/Tools.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/WorldParams.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/WorldParams.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/sensors-21-05293.pdf\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/Simulator_2D/sensors-21-05293.pdf\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"FileTemplateManagerImpl\">\n    <option name=\"RECENT_TEMPLATES\">\n      <list>\n        <option value=\"Python Script\" />\n      </list>\n    </option>\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"MarkdownSettingsMigration\">\n    <option name=\"stateVersion\" value=\"1\" />\n  </component>\n  <component name=\"ProjectId\" id=\"2gxc28q3sfz8TWw0zRUGPrXD996\" />\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\" />\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\">{\n  &quot;keyToString&quot;: {\n    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\n    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,\n    &quot;last_opened_file_path&quot;: &quot;/Users/michaeli/Desktop/autoRobot Projects/Drone_simulator_final_project&quot;,\n    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,\n    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,\n    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,\n    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,\n    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,\n    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;\n  }\n}</component>\n  <component name=\"RecentsManager\">\n    <key name=\"MoveFile.RECENT_KEYS\">\n      <recent name=\"$PROJECT_DIR$\" />\n      <recent name=\"$PROJECT_DIR$/Simulator_2D\" />\n    </key>\n  </component>\n  <component name=\"RunManager\" selected=\"Python.drone_simu\">\n    <configuration name=\"AutoAlgo1\" type=\"PythonConfigurationType\" factoryName=\"Python\" temporary=\"true\" nameIsGenerated=\"true\">\n      <module name=\"Drone_simulator\" />\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\n      <option name=\"PARENT_ENVS\" value=\"true\" />\n      <envs>\n        <env name=\"PYTHONUNBUFFERED\" value=\"1\" />\n      </envs>\n      <option name=\"SDK_HOME\" value=\"\" />\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$\" />\n      <option name=\"IS_MODULE_SDK\" value=\"true\" />\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\n      <option name=\"SCRIPT_NAME\" value=\"$PROJECT_DIR$/Simulator_2D/AutoAlgo1.py\" />\n      <option name=\"PARAMETERS\" value=\"\" />\n      <option name=\"SHOW_COMMAND_LINE\" value=\"false\" />\n      <option name=\"EMULATE_TERMINAL\" value=\"false\" />\n      <option name=\"MODULE_MODE\" value=\"false\" />\n      <option name=\"REDIRECT_INPUT\" value=\"false\" />\n      <option name=\"INPUT_FILE\" value=\"\" />\n      <method v=\"2\" />\n    </configuration>\n    <configuration name=\"SimulationWindow\" type=\"PythonConfigurationType\" factoryName=\"Python\" temporary=\"true\" nameIsGenerated=\"true\">\n      <module name=\"Drone_simulator\" />\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\n      <option name=\"PARENT_ENVS\" value=\"true\" />\n      <envs>\n        <env name=\"PYTHONUNBUFFERED\" value=\"1\" />\n      </envs>\n      <option name=\"SDK_HOME\" value=\"\" />\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$\" />\n      <option name=\"IS_MODULE_SDK\" value=\"true\" />\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\n      <option name=\"SCRIPT_NAME\" value=\"$PROJECT_DIR$/Simulator_2D/SimulationWindow.py\" />\n      <option name=\"PARAMETERS\" value=\"\" />\n      <option name=\"SHOW_COMMAND_LINE\" value=\"false\" />\n      <option name=\"EMULATE_TERMINAL\" value=\"false\" />\n      <option name=\"MODULE_MODE\" value=\"false\" />\n      <option name=\"REDIRECT_INPUT\" value=\"false\" />\n      <option name=\"INPUT_FILE\" value=\"\" />\n      <method v=\"2\" />\n    </configuration>\n    <configuration name=\"drone_simu\" type=\"PythonConfigurationType\" factoryName=\"Python\" temporary=\"true\" nameIsGenerated=\"true\">\n      <module name=\"Drone_simulator\" />\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\n      <option name=\"PARENT_ENVS\" value=\"true\" />\n      <envs>\n        <env name=\"PYTHONUNBUFFERED\" value=\"1\" />\n      </envs>\n      <option name=\"SDK_HOME\" value=\"\" />\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$/Simulator_3D\" />\n      <option name=\"IS_MODULE_SDK\" value=\"true\" />\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\n      <option name=\"SCRIPT_NAME\" value=\"$PROJECT_DIR$/Simulator_3D/drone_simu.py\" />\n      <option name=\"PARAMETERS\" value=\"\" />\n      <option name=\"SHOW_COMMAND_LINE\" value=\"false\" />\n      <option name=\"EMULATE_TERMINAL\" value=\"false\" />\n      <option name=\"MODULE_MODE\" value=\"false\" />\n      <option name=\"REDIRECT_INPUT\" value=\"false\" />\n      <option name=\"INPUT_FILE\" value=\"\" />\n      <method v=\"2\" />\n    </configuration>\n    <recent_temporary>\n      <list>\n        <item itemvalue=\"Python.drone_simu\" />\n        <item itemvalue=\"Python.SimulationWindow\" />\n        <item itemvalue=\"Python.AutoAlgo1\" />\n      </list>\n    </recent_temporary>\n  </component>\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"72cd5d53-2bbd-481d-a092-1f23edf2a36f\" name=\"Changes\" comment=\"\" />\n      <created>1716642459712</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1716642459712</updated>\n      <workItem from=\"1716642461351\" duration=\"109000\" />\n      <workItem from=\"1719742829844\" duration=\"18000\" />\n      <workItem from=\"1719742891789\" duration=\"469000\" />\n      <workItem from=\"1720281427076\" duration=\"10735000\" />\n      <workItem from=\"1720518091828\" duration=\"319000\" />\n    </task>\n    <task id=\"LOCAL-00001\" summary=\"Ordered form for ai\">\n      <created>1720206606372</created>\n      <option name=\"number\" value=\"00001\" />\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1720206606372</updated>\n    </task>\n    <task id=\"LOCAL-00002\" summary=\"Dictionary max risk\">\n      <created>1720251626364</created>\n      <option name=\"number\" value=\"00002\" />\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1720251626364</updated>\n    </task>\n    <task id=\"LOCAL-00003\" summary=\"update ai algoritm\">\n      <created>1720269761790</created>\n      <option name=\"number\" value=\"00003\" />\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1720269761790</updated>\n    </task>\n    <task id=\"LOCAL-00004\" summary=\"Arranging the screen and switching between maps\">\n      <created>1720291568274</created>\n      <option name=\"number\" value=\"00004\" />\n      <option name=\"presentableId\" value=\"LOCAL-00004\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1720291568274</updated>\n    </task>\n    <option name=\"localTasksCounter\" value=\"5\" />\n    <servers />\n  </component>\n  <component name=\"TypeScriptGeneratedFilesManager\">\n    <option name=\"version\" value=\"3\" />\n  </component>\n  <component name=\"Vcs.Log.Tabs.Properties\">\n    <option name=\"TAB_STATES\">\n      <map>\n        <entry key=\"MAIN\">\n          <value>\n            <State />\n          </value>\n        </entry>\n      </map>\n    </option>\n  </component>\n  <component name=\"VcsManagerConfiguration\">\n    <MESSAGE value=\"Ordered form for ai\" />\n    <MESSAGE value=\"Dictionary max risk\" />\n    <MESSAGE value=\"update ai algoritm\" />\n    <MESSAGE value=\"Arranging the screen and switching between maps\" />\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"Arranging the screen and switching between maps\" />\n  </component>\n  <component name=\"com.intellij.coverage.CoverageDataManagerImpl\">\n    <SUITE FILE_PATH=\"coverage/Drone_simulator_final_project$AutoAlgo1.coverage\" NAME=\"AutoAlgo1 Coverage Results\" MODIFIED=\"1720202279994\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"true\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\n    <SUITE FILE_PATH=\"coverage/Drone_simulator_final_project$Graph.coverage\" NAME=\"Graph Coverage Results\" MODIFIED=\"1720189553375\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"true\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\n    <SUITE FILE_PATH=\"coverage/Drone_simulator_final_project$SimulationWindow.coverage\" NAME=\"SimulationWindow Coverage Results\" MODIFIED=\"1720518334249\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"true\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision a3be7011276a949b77d088ee13b0225ceab00851)
++++ b/.idea/workspace.xml	(date 1720531303415)
+@@ -6,26 +6,8 @@
+   <component name="ChangeListManager">
+     <list default="true" id="72cd5d53-2bbd-481d-a092-1f23edf2a36f" name="Changes" comment="Arranging the screen and switching between maps">
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/AutoAlgo1.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/AutoAlgo1.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/CPU.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/CPU.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Drone.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Drone.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Graph.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Lidar.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Lidar.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Map.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Map.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Maps/drone_3_pixels.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/drone_3_pixels.png" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Maps/p11.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p11.png" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Maps/p12.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p12.png" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Maps/p13.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p13.png" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Maps/p14.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p14.png" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Maps/p15.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p15.png" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Maps/scaled_p14.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/scaled_p14.png" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Painter.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Painter.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Point.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Point.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/README.md" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/SimulationWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/SimulationWindow.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/Tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Tools.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/WorldParams.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/WorldParams.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/sensors-21-05293.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/sensors-21-05293.pdf" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/Simulator_3D/drone.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_3D/drone.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/Simulator_3D/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_3D/game.py" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -42,38 +24,57 @@
+   <component name="Git.Settings">
+     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+   </component>
++  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
++  "lastFilter": {
++    "state": "OPEN",
++    "assignee": "Naorl98"
++  }
++}]]></component>
++  <component name="GithubPullRequestsUISettings"><![CDATA[{
++  "selectedUrlAndAccountId": {
++    "url": "https://github.com/roni5604/Drone_Simulator_final_project.git",
++    "accountId": "38dc5fc1-d863-45a7-ac22-0fb34666573f"
++  }
++}]]></component>
+   <component name="MarkdownSettingsMigration">
+     <option name="stateVersion" value="1" />
+   </component>
++  <component name="ProjectColorInfo"><![CDATA[{
++  "customColor": "",
++  "associatedIndex": 3
++}]]></component>
+   <component name="ProjectId" id="2gxc28q3sfz8TWw0zRUGPrXD996" />
+   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+   <component name="ProjectViewState">
+     <option name="hideEmptyMiddlePackages" value="true" />
+     <option name="showLibraryContents" value="true" />
+   </component>
+-  <component name="PropertiesComponent">{
+-  &quot;keyToString&quot;: {
+-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+-    &quot;last_opened_file_path&quot;: &quot;/Users/michaeli/Desktop/autoRobot Projects/Drone_simulator_final_project&quot;,
+-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
++  <component name="PropertiesComponent"><![CDATA[{
++  "keyToString": {
++    "Python.main.executor": "Run",
++    "RunOnceActivity.OpenProjectViewOnStart": "true",
++    "RunOnceActivity.ShowReadmeOnStart": "true",
++    "WebServerToolWindowFactoryState": "false",
++    "git-widget-placeholder": "master",
++    "last_opened_file_path": "/Users/michaeli/Desktop/autoRobot Projects/Drone_simulator_final_project",
++    "node.js.detected.package.eslint": "true",
++    "node.js.detected.package.tslint": "true",
++    "node.js.selected.package.eslint": "(autodetect)",
++    "node.js.selected.package.tslint": "(autodetect)",
++    "nodejs_package_manager_path": "npm",
++    "vue.rearranger.settings.migration": "true"
+   }
+-}</component>
++}]]></component>
+   <component name="RecentsManager">
+     <key name="MoveFile.RECENT_KEYS">
+       <recent name="$PROJECT_DIR$" />
+       <recent name="$PROJECT_DIR$/Simulator_2D" />
+     </key>
+   </component>
+-  <component name="RunManager" selected="Python.drone_simu">
++  <component name="RunManager" selected="Python.main">
+     <configuration name="AutoAlgo1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+       <module name="Drone_simulator" />
++      <option name="ENV_FILES" value="" />
+       <option name="INTERPRETER_OPTIONS" value="" />
+       <option name="PARENT_ENVS" value="true" />
+       <envs>
+@@ -96,6 +97,7 @@
+     </configuration>
+     <configuration name="SimulationWindow" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+       <module name="Drone_simulator" />
++      <option name="ENV_FILES" value="" />
+       <option name="INTERPRETER_OPTIONS" value="" />
+       <option name="PARENT_ENVS" value="true" />
+       <envs>
+@@ -118,6 +120,7 @@
+     </configuration>
+     <configuration name="drone_simu" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+       <module name="Drone_simulator" />
++      <option name="ENV_FILES" value="" />
+       <option name="INTERPRETER_OPTIONS" value="" />
+       <option name="PARENT_ENVS" value="true" />
+       <envs>
+@@ -138,14 +141,46 @@
+       <option name="INPUT_FILE" value="" />
+       <method v="2" />
+     </configuration>
++    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
++      <module name="Drone_simulator" />
++      <option name="ENV_FILES" value="" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <envs>
++        <env name="PYTHONUNBUFFERED" value="1" />
++      </envs>
++      <option name="SDK_HOME" value="" />
++      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Simulator_3D" />
++      <option name="IS_MODULE_SDK" value="true" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
++      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Simulator_3D/main.py" />
++      <option name="PARAMETERS" value="" />
++      <option name="SHOW_COMMAND_LINE" value="false" />
++      <option name="EMULATE_TERMINAL" value="false" />
++      <option name="MODULE_MODE" value="false" />
++      <option name="REDIRECT_INPUT" value="false" />
++      <option name="INPUT_FILE" value="" />
++      <method v="2" />
++    </configuration>
+     <recent_temporary>
+       <list>
++        <item itemvalue="Python.main" />
+         <item itemvalue="Python.drone_simu" />
+         <item itemvalue="Python.SimulationWindow" />
+         <item itemvalue="Python.AutoAlgo1" />
+       </list>
+     </recent_temporary>
+   </component>
++  <component name="SharedIndexes">
++    <attachedChunks>
++      <set>
++        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-PY-241.18034.82" />
++        <option value="bundled-python-sdk-975db3bf15a3-2767605e8bc2-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.18034.82" />
++      </set>
++    </attachedChunks>
++  </component>
+   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+   <component name="TaskManager">
+     <task active="true" id="Default" summary="Default task">
+@@ -159,6 +194,7 @@
+       <workItem from="1719742891789" duration="469000" />
+       <workItem from="1720281427076" duration="10735000" />
+       <workItem from="1720518091828" duration="319000" />
++      <workItem from="1720526734078" duration="1648000" />
+     </task>
+     <task id="LOCAL-00001" summary="Ordered form for ai">
+       <created>1720206606372</created>
+@@ -213,8 +249,9 @@
+     <option name="LAST_COMMIT_MESSAGE" value="Arranging the screen and switching between maps" />
+   </component>
+   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+-    <SUITE FILE_PATH="coverage/Drone_simulator_final_project$AutoAlgo1.coverage" NAME="AutoAlgo1 Coverage Results" MODIFIED="1720202279994" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$Graph.coverage" NAME="Graph Coverage Results" MODIFIED="1720189553375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$SimulationWindow.coverage" NAME="SimulationWindow Coverage Results" MODIFIED="1720518334249" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
++    <SUITE FILE_PATH="coverage/Drone_Simulator_final_project$main.coverage" NAME="main Coverage Results" MODIFIED="1720526960493" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Simulator_3D" />
++    <SUITE FILE_PATH="coverage/Drone_simulator_final_project$AutoAlgo1.coverage" NAME="AutoAlgo1 Coverage Results" MODIFIED="1720202279994" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+   </component>
+ </project>
+\ No newline at end of file
