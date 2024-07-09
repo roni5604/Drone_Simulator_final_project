@@ -9,8 +9,8 @@ from world_params import *
 
 class Game:
     def __init__(self):
-        pygame.init()  # Initialize all imported pygame modules
-        pygame.font.init()  # Initialize the font module
+        pygame.init()
+        pygame.font.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption("3D Drone Simulation")
         self.clock = pygame.time.Clock()
@@ -18,7 +18,7 @@ class Game:
         self.drone = Drone()
         self.sensor = Sensor(self.drone)
         self.map = Map()
-        self.button_ai = Button('AI', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 120, 190, 50)
+        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 120, 190, 50)
         self.button_return = Button('Return Home', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 190, 190, 50)
         self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 50, 190, 50)
         self.do_ai = False
