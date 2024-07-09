@@ -21,7 +21,7 @@ class Game:
         self.button_ai = Button('AI', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 120, 190, 50)
         self.button_return = Button('Return Home', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 190, 190, 50)
         self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 50, 190, 50)
-        self.do_ai = True
+        self.do_ai = False
         self.do_return = False
 
     def cast_rays(self):

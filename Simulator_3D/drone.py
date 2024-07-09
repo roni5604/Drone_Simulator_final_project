@@ -15,7 +15,7 @@ class Drone:
         self.gyro_angle = 0
         self.pitch = 0
         self.speed = 2
-        self.moving = True
+        self.moving = False
         self.right_left = 1
         self.timing_change = 0
         self.dangerous_distance = 30
