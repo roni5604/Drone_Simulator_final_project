@@ -287,7 +287,7 @@ class Game:
                         self.drone.update_points(2)
                         self.drone.visited_positions_2.add((int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))
         # Autonomous height movement
-        if self.drone.move_floor or random.random() < 0.005:
+        if self.drone.move_floor or random.random() < 0.003:
             if self.drone.current_layer == 1:
                 if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:
                     self.drone.moving = False
