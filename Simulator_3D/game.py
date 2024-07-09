@@ -354,7 +354,7 @@ class Game:
                 self.drone.moving = False
                 self.drone.return_home_speed = []
                 self.drone.return_home_angle = []
-                self.button_sensors.color = WHITE
+                self.button_return.color = WHITE
                 self.do_return = False
             return
 
