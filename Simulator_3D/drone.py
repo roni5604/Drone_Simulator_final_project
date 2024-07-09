@@ -1,12 +1,12 @@
 import pygame
-import math
-from world_params import SCREEN_WIDTH, SCREEN_HEIGHT
+from world_params import SCREEN_WIDTH, SCREEN_HEIGHT, DRONE_PICTURE, WARNING_PICTURE
+
 
 class Drone:
     def __init__(self):
-        self.image = pygame.image.load('drone_pic.png')
+        self.image = pygame.image.load(DRONE_PICTURE)
         self.image = pygame.transform.scale(self.image, (300, 300))  # Scale up the drone image
-        self.warning_light_img = pygame.image.load('warning.png')
+        self.warning_light_img = pygame.image.load(WARNING_PICTURE)
         self.warning_light_img = pygame.transform.scale(self.warning_light_img, (64, 64))  # Scale warning light image
         self.x = 64 * 1.5
         self.y = 64 * 1.5
