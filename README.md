@@ -231,7 +231,7 @@ Users can observe the drone's movement, sensor detection, and obstacle avoidance
 
 
 #### Initial Position
-![Initial Position](Screenshots/start_position.png)
+![Initial Position](Screenshots/floor_1.png)
 
 
 This screenshot shows the initial position of the drone in the simulation. The drone starts at a predefined point, ready for manual or autonomous navigation.
@@ -252,7 +252,7 @@ This image depicts the drone at the start of a new mission. The map and sensors 
 
 
 #### Floor 1
-![Floor 1](Screenshots/floor_1.png)
+![Floor 1](Screenshots/start_position.png)
 
 
 This screenshot shows the layout of the first floor in the simulation environment. It includes obstacles and navigable areas that the drone must navigate through.
