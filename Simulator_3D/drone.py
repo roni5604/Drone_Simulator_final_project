@@ -1,7 +1,13 @@
+import math
+
 import pygame
 from world_params import SCREEN_WIDTH, SCREEN_HEIGHT, DRONE_PICTURE, WARNING_PICTURE
+from map import Map
 
-
+class Point:
+    def __init__(self, y, x):
+        self.x = x
+        self.y = y
 class Drone:
     def __init__(self):
         self.image = pygame.image.load(DRONE_PICTURE)
@@ -15,6 +21,7 @@ class Drone:
         self.gyro_angle = 0
         self.pitch = 0
         self.speed = 2
+        self.map = Map()
         self.moving = False
         self.right_left = 1
         self.timing_change = 0
@@ -28,6 +35,30 @@ class Drone:
         self.visited_positions_1 = set()
         self.visited_positions_2 = set()
         self.current_map = []
+        self.points_1 = [Point(self.y, self.x)]
+        self.points_2 = None
+        self.scaled_points_1 = [(int(self.y / self.map.scale), int(self.x / self.map.scale))]
+        self.scaled_points_2 = None
+
+    def update_points(self, layer):
+        if layer == 1:
+            last_point = self.points_1[-1]
+            distance = math.sqrt((self.x - last_point.x) ** 2 + (self.y - last_point.y) ** 2)
+            if distance > 300:
+                self.points_1.append(Point(self.y, self.x,))
+                self.scaled_points_1.append((int(self.y / self.map.scale), int(self.x / self.map.scale)))
+
+        else:
+            if self.points_2 is None:
+                self.points_2 = [Point(self.y, self.x)]
+                self.scaled_points_2= [(int(self.y / self.map.scale), int(self.x / self.map.scale))]
+
+                return
+            last_point = self.points_2[-1]
+            distance = math.sqrt((self.x - last_point.x) ** 2 + (self.y - last_point.y) ** 2)
+            if distance > 300:
+                self.points_2.append(Point(self.y, self.x))
+                self.scaled_points_2.append((int(self.y / self.map.scale), int(self.x / self.map.scale)))
 
     def format_rotation(self, rotation_value):
         """
