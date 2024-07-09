@@ -334,10 +334,17 @@ class Game:
         if not self.do_return:
             return
         if not self.drone.return_home_angle or not self.drone.return_home_speed:
-            self.drone.moving = False
-            self.drone.return_home_speed = []
-            self.drone.return_home_angle = []
-            self.do_return = False
+
+            if self.drone.spin_back > 0:
+                self.drone.speed = 0
+                self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 2)
+                self.drone.spin_back -= 2
+            else:
+                self.drone.spin_back = 0
+                self.drone.moving = False
+                self.drone.return_home_speed = []
+                self.drone.return_home_angle = []
+                self.do_return = False
             return
 
         while self.drone.spin_back < 180:
