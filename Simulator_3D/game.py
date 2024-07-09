@@ -121,7 +121,7 @@ class Game:
         sensor_risky = {}
         for sensor_angle in sensor_angles:
             angle = math.radians(self.drone.gyro_angle + sensor_angle)
-            for depth in range(1, 800):
+            for depth in range(1, 200):
                 target_x = self.drone.x + math.cos(angle) * depth
                 target_y = self.drone.y + math.sin(angle) * depth
                 map_x = int(target_x / self.map.scale)
@@ -171,7 +171,7 @@ class Game:
         """
         # Calculate risk upwards
         angle_up = math.radians(self.drone.angle + self.sensor.up_down_sensors[0])
-        for depth in range(1, 800):
+        for depth in range(1, 200):
             target_x = self.drone.x + math.cos(angle_up) * depth
             target_y = self.drone.y + math.sin(angle_up) * depth
             map_x = int(target_x / self.map.scale)
@@ -188,7 +188,7 @@ class Game:
                     break
         # Calculate risk downwards
         angle_down = math.radians(self.drone.angle + self.sensor.up_down_sensors[1])
-        for depth in range(1, 800):
+        for depth in range(1, 200):
             target_x = self.drone.x + math.cos(angle_down) * depth
             target_y = self.drone.y + math.sin(angle_down) * depth
             map_x = int(target_x / self.map.scale)
