@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="72cd5d53-2bbd-481d-a092-1f23edf2a36f" name="Changes" comment="up and down Probability">
-      <change beforePath="$PROJECT_DIR$/Simulator_3D/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_3D/game.py" afterDir="false" />
+    <list default="true" id="72cd5d53-2bbd-481d-a092-1f23edf2a36f" name="Changes" comment="changed colors from blue and green to brown and gray">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,22 +47,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.main.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "/home/dvir/PycharmProjects/Drone_Simulator_final_project",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/dvir/PycharmProjects/Drone_Simulator_final_project&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -193,7 +193,8 @@
       <workItem from="1720281427076" duration="10735000" />
       <workItem from="1720518091828" duration="319000" />
       <workItem from="1720526734078" duration="6644000" />
-      <workItem from="1720536631322" duration="1964000" />
+      <workItem from="1720536631322" duration="2251000" />
+      <workItem from="1720539864592" duration="4000" />
     </task>
     <task id="LOCAL-00001" summary="Ordered form for ai">
       <created>1720206606372</created>
@@ -295,7 +296,15 @@
       <option name="project" value="LOCAL" />
       <updated>1720538503895</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="changed colors from blue and green to brown and gray">
+      <option name="closed" value="true" />
+      <created>1720538855973</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1720538855973</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -322,12 +331,13 @@
     <MESSAGE value="BUTTONS" />
     <MESSAGE value="dictance points" />
     <MESSAGE value="up and down Probability" />
-    <option name="LAST_COMMIT_MESSAGE" value="up and down Probability" />
+    <MESSAGE value="changed colors from blue and green to brown and gray" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed colors from blue and green to brown and gray" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$Graph.coverage" NAME="Graph Coverage Results" MODIFIED="1720189553375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$SimulationWindow.coverage" NAME="SimulationWindow Coverage Results" MODIFIED="1720518334249" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Drone_Simulator_final_project$main.coverage" NAME="main Coverage Results" MODIFIED="1720538595280" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Simulator_3D" />
+    <SUITE FILE_PATH="coverage/Drone_Simulator_final_project$main.coverage" NAME="main Coverage Results" MODIFIED="1720538865283" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Simulator_3D" />
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$AutoAlgo1.coverage" NAME="AutoAlgo1 Coverage Results" MODIFIED="1720202279994" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
