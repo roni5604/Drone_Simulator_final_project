@@ -424,15 +424,7 @@ class Game:
                         self.do_return = True
                         self.do_ai = False
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle - 1)
-            if keys[pygame.K_RIGHT]:
-                self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 1)
             self.drone.angle = math.radians(self.drone.gyro_angle)
-
-            if keys[pygame.K_SPACE]:
-                self.drone.moving = not self.drone.moving
 
             self.autonomous_movement()
             self.return_home_movement()
