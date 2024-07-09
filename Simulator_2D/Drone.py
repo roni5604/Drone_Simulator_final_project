@@ -20,7 +20,7 @@ class Drone:
         self.gyro_rotation = self.rotation
 
         self.cpu = CPU(100, "Drone")  # 10Hz CPU
-        self.drone_img_path = "Maps/drone_3_pixels.png"
+        self.drone_img_path = "Simulator_2D/Maps/drone_3_pixels.png"
         self.mImage = None
 
     def play(self):

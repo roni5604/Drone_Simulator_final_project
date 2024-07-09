@@ -4,10 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="72cd5d53-2bbd-481d-a092-1f23edf2a36f" name="Changes" comment="update ai algoritm">
+    <list default="true" id="72cd5d53-2bbd-481d-a092-1f23edf2a36f" name="Changes" comment="Arranging the screen and switching between maps">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/AutoAlgo1.py" beforeDir="false" afterPath="$PROJECT_DIR$/AutoAlgo1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SimulationWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/SimulationWindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AutoAlgo1.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/AutoAlgo1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CPU.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/CPU.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Drone.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Drone.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Graph.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Lidar.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Lidar.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Map.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Map.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Maps/drone_3_pixels.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/drone_3_pixels.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Maps/p11.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p11.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Maps/p12.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p12.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Maps/p13.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p13.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Maps/p14.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p14.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Maps/p15.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/p15.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Maps/scaled_p14.png" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Maps/scaled_p14.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Painter.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Painter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Point.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Point.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SimulationWindow.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/SimulationWindow.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tools.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/Tools.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WorldParams.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/WorldParams.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sensors-21-05293.pdf" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_2D/sensors-21-05293.pdf" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,7 +65,13 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.SimulationWindow">
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/Simulator_2D" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.drone_simu">
     <configuration name="AutoAlgo1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Drone_simulator" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -61,7 +85,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/AutoAlgo1.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Simulator_2D/AutoAlgo1.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -83,7 +107,29 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SimulationWindow.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Simulator_2D/SimulationWindow.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="drone_simu" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Drone_simulator" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Simulator_3D" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Simulator_3D/drone_simu.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -94,6 +140,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.drone_simu" />
         <item itemvalue="Python.SimulationWindow" />
         <item itemvalue="Python.AutoAlgo1" />
       </list>
@@ -110,7 +157,8 @@
       <workItem from="1716642461351" duration="109000" />
       <workItem from="1719742829844" duration="18000" />
       <workItem from="1719742891789" duration="469000" />
-      <workItem from="1720281427076" duration="9896000" />
+      <workItem from="1720281427076" duration="10735000" />
+      <workItem from="1720518091828" duration="319000" />
     </task>
     <task id="LOCAL-00001" summary="Ordered form for ai">
       <created>1720206606372</created>
@@ -133,7 +181,14 @@
       <option name="project" value="LOCAL" />
       <updated>1720269761790</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Arranging the screen and switching between maps">
+      <created>1720291568274</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1720291568274</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -154,11 +209,12 @@
     <MESSAGE value="Ordered form for ai" />
     <MESSAGE value="Dictionary max risk" />
     <MESSAGE value="update ai algoritm" />
-    <option name="LAST_COMMIT_MESSAGE" value="update ai algoritm" />
+    <MESSAGE value="Arranging the screen and switching between maps" />
+    <option name="LAST_COMMIT_MESSAGE" value="Arranging the screen and switching between maps" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$AutoAlgo1.coverage" NAME="AutoAlgo1 Coverage Results" MODIFIED="1720202279994" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$Graph.coverage" NAME="Graph Coverage Results" MODIFIED="1720189553375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/Drone_simulator_final_project$SimulationWindow.coverage" NAME="SimulationWindow Coverage Results" MODIFIED="1720291328603" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Drone_simulator_final_project$SimulationWindow.coverage" NAME="SimulationWindow Coverage Results" MODIFIED="1720518334249" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

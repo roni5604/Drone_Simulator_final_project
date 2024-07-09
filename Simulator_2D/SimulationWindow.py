@@ -1,5 +1,5 @@
 import pygame
-from AutoAlgo1 import AutoAlgo1
+from Simulator_2D.AutoAlgo1 import AutoAlgo1
 from CPU import CPU
 from Map import Map
 from Point import Point
@@ -12,7 +12,7 @@ start_points = [
     Point(84, 73),
     Point(92, 100)
 ]
-map_path = f"Maps/p1{map_num}.png"
+map_path = f"Simulator_2D/Maps/p1{map_num}.png"
 
 real_map = Map(map_path, start_points[map_num - 1])
 
