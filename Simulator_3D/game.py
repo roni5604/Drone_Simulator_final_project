@@ -6,7 +6,7 @@ from sensor import Sensor
 from map import Map
 from button import Button
 from world_params import *
-
+from battery import Battery
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
@@ -21,17 +21,18 @@ class Game:
         pygame.font.init() # Initialize pygame font
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) # Set the screen size
         pygame.display.set_caption("3D Drone Simulation") # Set the title of the window
+        self.battery = Battery()
         self.clock = pygame.time.Clock() # Initialize the clock
         self.running = True # Set the game to running
         self.drone = Drone() # Create the drone
         self.sensor = Sensor(self.drone) # Create the sensor
         self.map = Map() # Create the map
-        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 120, 190, 50) # Create the
+        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 950, SCREEN_HEIGHT - 55, 200, 50) # Create the
         # self-driving button
-        self.button_return = Button('Return Home', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 190, 190, 50) # Create the
+        self.button_return = Button('Return Home', SCREEN_WIDTH - 700, SCREEN_HEIGHT - 55, 200, 50) # Create the
         # return home button
-        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 50, 190, 50) # Create the
-        # switch sensors button
+        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 55, 200, 50) # Create the
+        self.button_charge = Button('Charge', SCREEN_WIDTH - 450, SCREEN_HEIGHT - 55, 200, 50)
         self.do_ai = False # Set the self-driving mode to False
         self.do_return = False # Set the return home mode to False
 
@@ -449,8 +450,16 @@ class Game:
                         self.button_ai.color = WHITE
                         self.button_return.color = GRAY
                         self.button_sensors.color = WHITE
+                    if self.button_charge.rect.collidepoint(mouse_x, mouse_y):
+                        self.battery.is_half = False
+                        self.battery.charge = self.battery.max_charge
 
             self.drone.angle = math.radians(self.drone.gyro_angle)
+            if self.battery.drain():
+                self.do_return = True
+                self.do_ai = False
+                self.button_ai.color = WHITE
+                self.button_return.color = GRAY
 
             self.autonomous_movement()
             self.return_home_movement()
@@ -465,6 +474,9 @@ class Game:
             self.button_sensors.draw(self.screen)
             self.button_ai.draw(self.screen)
             self.button_return.draw(self.screen)
+            self.button_charge.draw(self.screen)
+            # Draw the battery
+            self.battery.draw(self.screen)
 
             pygame.draw.rect(self.screen, (255, 255, 255), (
                 MINIMAP_OFFSET_X - 5, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,
