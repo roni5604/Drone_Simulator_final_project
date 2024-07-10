@@ -293,6 +293,19 @@ class Game:
             self.drone.x, self.drone.y = new_x, new_y
             self.drone.current_point = (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale))
 
+    def draw_map(self):
+        """
+        Draw the map from a top-down view.
+        """
+        for y in range(len(APARTMENT1_WALLS)):
+            for x in range(len(APARTMENT1_WALLS[y])):
+                if self.drone.current_layer == 1 and APARTMENT1_WALLS[y][x] == 1:
+                    pygame.draw.rect(self.screen, BROWN,
+                                     (x * self.map.scale, y * self.map.scale, self.map.scale, self.map.scale))
+                elif self.drone.current_layer == 2 and APARTMENT2_WALLS[y][x] == 1:
+                    pygame.draw.rect(self.screen, GRAY,
+                                     (x * self.map.scale, y * self.map.scale, self.map.scale, self.map.scale))
+
     def run(self):
         """
         Main game loop for the drone simulation.
@@ -400,6 +413,12 @@ class Game:
                     pygame.draw.rect(self.screen, color, (
                         MINIMAP_OFFSET_X + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,
                         MINIMAP_SCALE))
+                    # Draw a small white point for the drone's current position
+                    if (y, x) == self.drone.current_point:
+                        center_x = MINIMAP_OFFSET_X + x * MINIMAP_SCALE + MINIMAP_SCALE // 2
+                        center_y = MINIMAP_OFFSET_Y + y * MINIMAP_SCALE + MINIMAP_SCALE // 2
+                        pygame.draw.circle(self.screen, WHITE, (center_x, center_y), MINIMAP_SCALE // 4)
+
 
             # Draw the secondary minimap
             pygame.draw.rect(self.screen, (255, 255, 255), (
@@ -410,11 +429,15 @@ class Game:
                     color = BROWN if self.drone.current_layer == 1 else GRAY
                     if APARTMENT2_FLOOR[y][x] == 2:
                         color = BLACK
-                    if (y, x) == self.drone.current_point:
-                        color = RED
                     pygame.draw.rect(self.screen, color, (
                         MINIMAP_OFFSET_X - 200 + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,
                         MINIMAP_SCALE))
+                    # Draw a small white point for the drone's current position
+                    if (y, x) == self.drone.current_point:
+                        center_x = MINIMAP_OFFSET_X -200 + x * MINIMAP_SCALE + MINIMAP_SCALE // 2
+                        center_y = MINIMAP_OFFSET_Y + y * MINIMAP_SCALE + MINIMAP_SCALE // 2
+                        pygame.draw.circle(self.screen, WHITE, (center_x, center_y), MINIMAP_SCALE // 4)
+
 
             # Draw sensor lines on the secondary minimap
             self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X - 200, MINIMAP_OFFSET_Y,
