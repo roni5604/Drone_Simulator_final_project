@@ -16,6 +16,7 @@ BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 BROWN = (101, 67, 33)
 
+
 class Game:
     def __init__(self):  # Initialize the game
         pygame.init()  # Initialize pygame
@@ -27,10 +28,14 @@ class Game:
         self.running = True  # Set the game to running
         self.drone = Drone()  # Create the drone
         self.map = Map()  # Create the map
-        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 950, SCREEN_HEIGHT - 55, 200, 50)  # Create the self-driving button
-        self.button_return = Button('Return Home', SCREEN_WIDTH - 700, SCREEN_HEIGHT - 55, 200, 50)  # Create the return home button
-        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 55, 200, 50)  # Create the switch sensors button
-        self.button_charge = Button('Charge', SCREEN_WIDTH - 450, SCREEN_HEIGHT - 55, 200, 50)  # Create the charge button
+        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 950, SCREEN_HEIGHT - 55, 200,
+                                50)  # Create the self-driving button
+        self.button_return = Button('Return Home', SCREEN_WIDTH - 700, SCREEN_HEIGHT - 55, 200,
+                                    50)  # Create the return home button
+        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 55, 200,
+                                     50)  # Create the switch sensors button
+        self.button_charge = Button('Charge', SCREEN_WIDTH - 450, SCREEN_HEIGHT - 55, 200,
+                                    50)  # Create the charge button
         self.do_ai = False  # Set the self-driving mode to False
         self.do_return = False  # Set the return home mode to False
 
@@ -58,7 +63,8 @@ class Game:
                     wall_height = SCREEN_HEIGHT / (depth * 0.05)
                     ceiling_height = -SCREEN_HEIGHT / (depth * 0.05)  # Ceiling height
                     pygame.draw.rect(self.screen, color, (
-                        ray * (SCREEN_WIDTH // 120), (SCREEN_HEIGHT / 2) - wall_height / 2, SCREEN_WIDTH // 120, wall_height))
+                        ray * (SCREEN_WIDTH // 120), (SCREEN_HEIGHT / 2) - wall_height / 2, SCREEN_WIDTH // 120,
+                        wall_height))
                     pygame.draw.rect(self.screen, color, (
                         ray * (SCREEN_WIDTH // 120), (SCREEN_HEIGHT / 2) - wall_height / 2 - ceiling_height,
                         SCREEN_WIDTH // 120, ceiling_height))
@@ -72,9 +78,9 @@ class Game:
         sensor_risky = {}
         for sensor_angle in sensor_angles:
             if sensor_angle.is_up_down == 1:
-                    self.calculate_risky_up_down(True)
+                self.calculate_risky_up_down(True)
             elif sensor_angle.is_up_down == 2:
-                    self.calculate_risky_up_down(False)
+                self.calculate_risky_up_down(False)
             else:
                 angle = math.radians(self.drone.gyro_angle + sensor_angle.config)
                 for depth in range(1, 50):
@@ -159,6 +165,7 @@ class Game:
                     if sensor_readings[sensor_angle] == min_sensor_dist:
                         degree = sensor_angle.config
                 if degree < 0:  # Closer to left wall
+
                     self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 1)  # Rotate right
                 else:  # Closer to right wall
                     self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle - 1)  # Rotate left
@@ -168,8 +175,8 @@ class Game:
 
             if self.drone.moving:
                 self.drone.speed_up()
-                if self.drone.timing_change == 30:
-                    self.drone.right_left *= -1
+                if self.drone.timing_change == 60:
+                    self.drone.right_left *= 1
                     self.drone.timing_change = 0
                 self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 0.5 * self.drone.right_left)
                 self.drone.return_home_speed.append(self.drone.speed)
@@ -182,18 +189,22 @@ class Game:
                 elif self.drone.current_layer == 2:
                     self.drone.current_map = APARTMENT2_WALLS
 
-                if self.drone.current_map[int(new_y / self.map.scale)][int(new_x / self.map.scale)] in [0]:  # Allow passage through holes
+                if self.drone.current_map[int(new_y / self.map.scale)][int(new_x / self.map.scale)] in [
+                    0]:  # Allow passage through holes
                     self.drone.x, self.drone.y = new_x, new_y
                     self.drone.current_point = (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale))
                     if self.drone.current_layer == 1:
                         self.drone.update_points(1)
-                        self.drone.visited_positions_1.add((int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))
+                        self.drone.visited_positions_1.add(
+                            (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))
                     elif self.drone.current_layer == 2:
                         self.drone.update_points(2)
-                        self.drone.visited_positions_2.add((int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))
+                        self.drone.visited_positions_2.add(
+                            (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))
         if self.drone.move_floor or random.random() < 0.003:
             if self.drone.current_layer == 1:
-                if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:
+                if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][
+                    int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:
                     self.drone.moving = False
                     self.drone.speed = 0
                     self.drone.move_floor = True
@@ -209,7 +220,8 @@ class Game:
                         self.drone.moving = True
 
             elif self.drone.current_layer == 2:
-                if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:
+                if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][
+                    int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:
                     self.drone.moving = False
                     self.drone.speed = 0
                     self.drone.move_floor = True
@@ -367,14 +379,16 @@ class Game:
             for y in range(20):
                 for x in range(20):
                     color = (0, 0, 0)
-                    if APARTMENT1_WALLS[y][x] == 1 or APARTMENT2_WALLS[y][x] == 1:
-                        color = BROWN if self.drone.current_layer == 1 else GRAY
                     if self.drone.current_layer == 1:
+                        if APARTMENT1_WALLS[y][x] == 1:
+                            color = BROWN
                         if (y, x) in self.drone.visited_positions_1:
                             color = RED
                         if (y, x) in self.drone.scaled_points_1:
                             color = GREEN
-                    if self.drone.current_layer == 2:
+                    else:
+                        if APARTMENT2_WALLS[y][x] == 1:
+                            color = GRAY
                         if (y, x) in self.drone.visited_positions_2:
                             color = RED
                         if (y, x) in self.drone.scaled_points_2:
@@ -386,7 +400,6 @@ class Game:
                     pygame.draw.rect(self.screen, color, (
                         MINIMAP_OFFSET_X + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,
                         MINIMAP_SCALE))
-
 
             # Draw the secondary minimap
             pygame.draw.rect(self.screen, (255, 255, 255), (
@@ -405,7 +418,7 @@ class Game:
 
             # Draw sensor lines on the secondary minimap
             self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X - 200, MINIMAP_OFFSET_Y,
-                                          MINIMAP_SCALE)
+                                         MINIMAP_SCALE)
             self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X, MINIMAP_OFFSET_Y,
                                          MINIMAP_SCALE)
 

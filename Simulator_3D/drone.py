@@ -29,7 +29,7 @@ class Drone:
         self.moving = False
         self.right_left = 1
         self.timing_change = 0
-        self.dangerous_distance = 30
+        self.dangerous_distance = 20
         self.current_layer = 1
         self.current_point = (0, 0)
         self.move_floor = False
@@ -71,44 +71,45 @@ class Drone:
         """
         sensor_angles = self.sensors[self.current_sensor]
         for sensor_angle in sensor_angles:
-            angle = math.radians(self.gyro_angle + sensor_angle.config)
-            for depth in range(1, 1000):
-                target_x = self.x + math.cos(angle) * depth
-                target_y = self.y + math.sin(angle) * depth
-                map_x = int(target_x / self.map.scale)
-                map_y = int(target_y / self.map.scale)
-                if self.current_layer == 1:
-                    current_map = APARTMENT1_WALLS
-                elif self.current_layer == 2:
-                    current_map = APARTMENT2_WALLS
+            if sensor_angle.is_up_down == 0:
+                angle = math.radians(self.gyro_angle + sensor_angle.config)
+                for depth in range(1, 1000):
+                    target_x = self.x + math.cos(angle) * depth
+                    target_y = self.y + math.sin(angle) * depth
+                    map_x = int(target_x / self.map.scale)
+                    map_y = int(target_y / self.map.scale)
+                    if self.current_layer == 1:
+                        current_map = APARTMENT1_WALLS
+                    elif self.current_layer == 2:
+                        current_map = APARTMENT2_WALLS
 
-                if map_x < 0 or map_x >= len(current_map[0]) or map_y < 0 or map_y >= len(current_map):
-                    break
-                if current_map[map_y][map_x] == 1:
-                    # Draw the sensor line
+                    if map_x < 0 or map_x >= len(current_map[0]) or map_y < 0 or map_y >= len(current_map):
+                        break
+                    if current_map[map_y][map_x] == 1:
+                        # Draw the sensor line
 
-                    if sensor_angle.is_up_down == 1 or sensor_angle.is_up_down == 2:
-                        color = (0, 255, 0)
+                        if sensor_angle.is_up_down == 1 or sensor_angle.is_up_down == 2:
+                            color = (0, 255, 0)
 
-                    else:
-                        color = (0, 0, 255)
-                    # Draw the sensor line on the minimap
-                    pygame.draw.line(screen, color,
-                                     (minimap_offset_x + self.x // self.map.scale * minimap_scale,
-                                      minimap_offset_y + self.y // self.map.scale * minimap_scale),
-                                     (minimap_offset_x + target_x // self.map.scale * minimap_scale,
-                                      minimap_offset_y + target_y // self.map.scale * minimap_scale), 1)
-                    break
+                        else:
+                            color = (0, 0, 255)
+                        # Draw the sensor line on the minimap
+                        pygame.draw.line(screen, color,
+                                         (minimap_offset_x + self.x // self.map.scale * minimap_scale,
+                                          minimap_offset_y + self.y // self.map.scale * minimap_scale),
+                                         (minimap_offset_x + target_x // self.map.scale * minimap_scale,
+                                          minimap_offset_y + target_y // self.map.scale * minimap_scale), 1)
+                        break
 
     def draw_sensors(self, screen):
         for sensor in self.sensors[self.current_sensor]:
             sensor.draw(self, screen)
     def speed_up(self):
-        if self.speed != 4:
-            self.speed += 1
+        if self.speed != 2:
+            self.speed += 0.5
     def speed_down(self):
         if self.speed != 0:
-            self.speed -= 1
+            self.speed -= 0.5
     def update_points(self, layer):
         if layer == 1:
             last_point = self.points_1[-1]
