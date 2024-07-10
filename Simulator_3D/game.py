@@ -96,6 +96,7 @@ class Game:
                             sensor_risky[sensor_angle] = depth
                             self.screen.blit(self.drone.warning_light_img, (10, 80))
                         break
+
         return sensor_risky
 
     def calculate_risky_up_down(self, is_up):
@@ -347,8 +348,9 @@ class Game:
 
             self.screen.fill((0, 0, 0))
             self.cast_rays()
-            self.drone.draw_sensors(self.screen)
+
             self.calculate_risky()
+            self.drone.draw_sensors(self.screen)
             self.drone.draw(self.screen)
 
             self.button_sensors.draw(self.screen)

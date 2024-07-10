@@ -59,9 +59,12 @@ class Sensor:
                                      (SCREEN_WIDTH // 2 + math.cos(angle) * depth,
                                       SCREEN_HEIGHT // 2 + math.sin(angle) * depth),
                                      1)
-                    if depth <= drone.dangerous_distance:
+                    if depth <= 100:
+                        # Draw the circle at the intersection point
+                        pygame.draw.circle(screen, (255, 255, 255), (int(SCREEN_WIDTH // 2 + math.cos(angle) * depth),
+                                                           int(SCREEN_HEIGHT // 2 + math.sin(angle) * depth)), 5)
                         text = self.font.render(str(depth), True, (255, 255, 255))
-                        screen.blit(text, (SCREEN_WIDTH // 2 + math.cos(angle) * depth,
+                        screen.blit(text, (SCREEN_WIDTH // 2 + math.cos(angle) * depth + 10,
                                            SCREEN_HEIGHT // 2 + math.sin(angle) * depth))
                     break
             return
