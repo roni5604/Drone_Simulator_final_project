@@ -175,10 +175,10 @@ class Game:
 
             if self.drone.moving:
                 self.drone.speed_up()
-                if self.drone.timing_change == 60:
+                if self.drone.timing_change == 50:
                     self.drone.right_left *= 1
                     self.drone.timing_change = 0
-                self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 0.5 * self.drone.right_left)
+                self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle +0.5 * self.drone.right_left)
                 self.drone.return_home_speed.append(self.drone.speed)
                 self.drone.timing_change += 1
                 self.drone.angle = math.radians(self.drone.gyro_angle)
@@ -201,7 +201,7 @@ class Game:
                         self.drone.update_points(2)
                         self.drone.visited_positions_2.add(
                             (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))
-        if self.drone.move_floor or random.random() < 0.003:
+        if self.drone.move_floor or random.random() < 0.006:
             if self.drone.current_layer == 1:
                 if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][
                     int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:
@@ -342,7 +342,7 @@ class Game:
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_x, mouse_y = event.pos
                     if self.button_sensors.rect.collidepoint(mouse_x, mouse_y):
-                        self.sensor.current_config = (self.sensor.current_config + 1) % len(self.sensor.configs)
+                        self.drone.current_sensor= (self.drone.current_sensor + 1) % len(self.drone.sensors)
                         self.button_sensors.color = GRAY
                     if self.button_ai.rect.collidepoint(mouse_x, mouse_y):
                         self.do_ai = True
