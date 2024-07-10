@@ -15,7 +15,7 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 GREEN = (0, 255, 0)
 BROWN = (101, 67, 33)
-
+D_YELLOW = (204, 204, 0)
 
 class Game:
     def __init__(self):  # Initialize the game
@@ -331,8 +331,8 @@ class Game:
         None
         """
 
-        MINIMAP_SCALE = 8  # Increase the scaling factor to make the minimap larger
-        MINIMAP_OFFSET_X = SCREEN_WIDTH - self.map.width * MINIMAP_SCALE - 20  # Adjust the offset to accommodate the new scale
+        MINIMAP_SCALE = 10  # Increase the scaling factor to make the minimap larger
+        MINIMAP_OFFSET_X = SCREEN_WIDTH - 220  # Adjust the offset to accommodate the new scale
         MINIMAP_OFFSET_Y = 20
 
         while self.running:
@@ -387,8 +387,7 @@ class Game:
 
             # Draw the main minimap
             pygame.draw.rect(self.screen, (255, 255, 255), (
-                MINIMAP_OFFSET_X - 5, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,
-                self.map.height * MINIMAP_SCALE + 10), 2)
+                MINIMAP_OFFSET_X - 5, MINIMAP_OFFSET_Y - 5, 20 * MINIMAP_SCALE + 10, 20 * MINIMAP_SCALE + 10), 2)
             for y in range(20):
                 for x in range(20):
                     color = (0, 0, 0)
@@ -417,31 +416,35 @@ class Game:
                     if (y, x) == self.drone.current_point:
                         center_x = MINIMAP_OFFSET_X + x * MINIMAP_SCALE + MINIMAP_SCALE // 2
                         center_y = MINIMAP_OFFSET_Y + y * MINIMAP_SCALE + MINIMAP_SCALE // 2
-                        pygame.draw.circle(self.screen, WHITE, (center_x, center_y), MINIMAP_SCALE // 4)
+                        pygame.draw.circle(self.screen, BLACK, (center_x, center_y), MINIMAP_SCALE // 4)
 
+            # Keep the secondary minimap unchanged
+            MINIMAP_SCALE_SECONDARY = 8
+            MINIMAP_OFFSET_X_SECONDARY = SCREEN_WIDTH - 400  # Adjust the offset as needed
+            MINIMAP_OFFSET_Y_SECONDARY = 20
 
             # Draw the secondary minimap
             pygame.draw.rect(self.screen, (255, 255, 255), (
-                MINIMAP_OFFSET_X - 205, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,
-                self.map.height * MINIMAP_SCALE + 10), 2)
+                MINIMAP_OFFSET_X_SECONDARY - 5, MINIMAP_OFFSET_Y_SECONDARY - 5, 20 * MINIMAP_SCALE_SECONDARY + 10,
+                20 * MINIMAP_SCALE_SECONDARY + 10), 2)
             for y in range(20):
                 for x in range(20):
                     color = BROWN if self.drone.current_layer == 1 else GRAY
                     if APARTMENT2_FLOOR[y][x] == 2:
                         color = BLACK
                     pygame.draw.rect(self.screen, color, (
-                        MINIMAP_OFFSET_X - 200 + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,
-                        MINIMAP_SCALE))
+                        MINIMAP_OFFSET_X_SECONDARY + x * MINIMAP_SCALE_SECONDARY,
+                        MINIMAP_OFFSET_Y_SECONDARY + y * MINIMAP_SCALE_SECONDARY, MINIMAP_SCALE_SECONDARY,
+                        MINIMAP_SCALE_SECONDARY))
                     # Draw a small white point for the drone's current position
                     if (y, x) == self.drone.current_point:
-                        center_x = MINIMAP_OFFSET_X -200 + x * MINIMAP_SCALE + MINIMAP_SCALE // 2
-                        center_y = MINIMAP_OFFSET_Y + y * MINIMAP_SCALE + MINIMAP_SCALE // 2
-                        pygame.draw.circle(self.screen, WHITE, (center_x, center_y), MINIMAP_SCALE // 4)
-
+                        center_x = MINIMAP_OFFSET_X_SECONDARY + x * MINIMAP_SCALE_SECONDARY + MINIMAP_SCALE_SECONDARY // 2
+                        center_y = MINIMAP_OFFSET_Y_SECONDARY + y * MINIMAP_SCALE_SECONDARY + MINIMAP_SCALE_SECONDARY // 2
+                        pygame.draw.circle(self.screen, D_YELLOW, (center_x, center_y), MINIMAP_SCALE_SECONDARY // 6)
 
             # Draw sensor lines on the secondary minimap
-            self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X - 200, MINIMAP_OFFSET_Y,
-                                         MINIMAP_SCALE)
+            self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X_SECONDARY , MINIMAP_OFFSET_Y_SECONDARY,
+                                         MINIMAP_SCALE_SECONDARY)
             self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X, MINIMAP_OFFSET_Y,
                                          MINIMAP_SCALE)
 

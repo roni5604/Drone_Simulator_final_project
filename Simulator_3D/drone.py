@@ -12,7 +12,7 @@ class Point:
         self.y = y
 class Drone:
     def __init__(self):
-        self.font = pygame.font.SysFont(None, 4)  # Initialize font
+        self.font = pygame.font.SysFont(None, 6)  # Initialize font
 
         self.image = pygame.image.load(DRONE_PICTURE)
         self.image = pygame.transform.scale(self.image, (300, 300))  # Scale up the drone image
@@ -98,7 +98,7 @@ class Drone:
                                          (minimap_offset_x + self.x // self.map.scale * minimap_scale,
                                           minimap_offset_y + self.y // self.map.scale * minimap_scale),
                                          (minimap_offset_x + target_x // self.map.scale * minimap_scale,
-                                          minimap_offset_y + target_y // self.map.scale * minimap_scale), 1)
+                                          minimap_offset_y + target_y // self.map.scale * minimap_scale), 2)
                         break
 
     def draw_sensors(self, screen):
@@ -161,7 +161,8 @@ class Drone:
     Returns:
     - tuple: A tuple containing the rotated image (pygame.Surface) and its new rectangle (pygame.Rect).
     """
-        rotated_image = pygame.transform.rotozoom(self.image, -angle, 1)
+
+        rotated_image = pygame.transform.rotozoom(self.image, -angle, 1.2)
         rotated_rect = rotated_image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + int(self.z * 20)))
         return rotated_image, rotated_rect
 
