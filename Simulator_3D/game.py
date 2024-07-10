@@ -1,3 +1,4 @@
+
 import pygame
 import math
 import random
@@ -25,7 +26,6 @@ class Game:
         self.clock = pygame.time.Clock() # Initialize the clock
         self.running = True # Set the game to running
         self.drone = Drone() # Create the drone
-        self.sensor = Sensor(self.drone) # Create the sensor
         self.map = Map() # Create the map
         self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 950, SCREEN_HEIGHT - 55, 200, 50) # Create the
         # self-driving button
@@ -130,30 +130,38 @@ class Game:
         Returns:
         - sensor_risky: Dictionary with sensor angles as keys and depths as values for risky directions.
         """
-        sensor_angles = self.sensor.configs[self.sensor.current_config]
+        sensor_angles = self.drone.sensors[self.drone.current_sensor]
         sensor_risky = {}
         for sensor_angle in sensor_angles:
-            angle = math.radians(self.drone.gyro_angle + sensor_angle)
-            for depth in range(1, 200):
-                target_x = self.drone.x + math.cos(angle) * depth
-                target_y = self.drone.y + math.sin(angle) * depth
-                map_x = int(target_x / self.map.scale)
-                map_y = int(target_y / self.map.scale)
-                if self.drone.current_layer == 1:
-                    current_map = APARTMENT1_WALLS
-                elif self.drone.current_layer == 2:
-                    current_map = APARTMENT2_WALLS
+            if sensor_angle.is_up_down is not None:
+                if sensor_angle.is_up_down:
+                    self.calculate_risky_up_down(True)
+                else:
+                    self.calculate_risky_up_down(False)
+            else:
+                angle = math.radians(self.drone.gyro_angle + sensor_angle.config)
+                for depth in range(1, 1000):
+                    target_x = self.drone.x + math.cos(angle) * depth
+                    target_y = self.drone.y + math.sin(angle) * depth
+                    map_x = int(target_x / self.map.scale)
+                    map_y = int(target_y / self.map.scale)
+                    if self.drone.current_layer == 1:
+                        current_map = APARTMENT1_WALLS
+                    elif self.drone.current_layer == 2:
+                        current_map = APARTMENT2_WALLS
 
-                if map_x < 0 or map_x > 20 or map_y > 20 or map_y < 0:
-                    break
-                if current_map[map_y][map_x] == 1:
-                    if depth < self.drone.dangerous_distance:
-                        sensor_risky[sensor_angle] = depth
-                        self.screen.blit(self.drone.warning_light_img, (10, 80))
-                    break
+                    if map_x < 0 or map_x > 20 or map_y > 20 or map_y < 0:
+                        break
+                    if current_map[map_y][map_x] == 1:
+                        print(f'{sensor_angle}:  {depth}')
+                        if depth < self.drone.dangerous_distance:
+                            sensor_angle.distance= depth
+                            sensor_risky[sensor_angle] = depth
+                            self.screen.blit(self.drone.warning_light_img, (10, 80))
+                        break
         return sensor_risky
 
-    def calculate_risky_up_down(self):
+    def calculate_risky_up_down(self, is_up):
         """
         Determines risky directions based on the drone's sensor data.
 
@@ -181,44 +189,48 @@ class Game:
         - map_x: The x-coordinate in the map corresponding to the target_x.
         - map_y: The y-coordinate in the map corresponding to the target_y.
         - current_map: The map layer the drone is currently on.
-
+angle
         Returns:
         - sensor_risky: Dictionary with sensor angles as keys and depths as values for risky directions.
         """
         # Calculate risk upwards
-        angle_up = math.radians(self.drone.angle + self.sensor.up_down_sensors[0])
-        for depth in range(1, 200):
-            target_x = self.drone.x + math.cos(angle_up) * depth
-            target_y = self.drone.y + math.sin(angle_up) * depth
-            map_x = int(target_x / self.map.scale)
-            map_y = int(target_y / self.map.scale)
-            if map_x < 0 or map_x > 20 or map_y > 20 or map_y < 0:
-                break
-            if self.drone.current_layer == 1 and APARTMENT2_FLOOR[map_y][map_x] == 1:
-                if depth < 1:
-                    self.screen.blit(self.drone.warning_light_img, (10, 80))
+        if is_up:
+            angle_up = math.radians(self.drone.angle + 90)
+            for depth in range(1, 1000):
+                target_x = self.drone.x + math.cos(angle_up) * depth
+                target_y = self.drone.y + math.sin(angle_up) * depth
+                map_x = int(target_x / self.map.scale)
+                map_y = int(target_y / self.map.scale)
+                if map_x < 0 or map_x > 20 or map_y > 20 or map_y < 0:
                     break
-            if self.drone.current_layer == 2 and CEILING2_MAP[map_y][map_x] == 1:
-                if depth < 1:
-                    self.screen.blit(self.drone.warning_light_img, (10, 80))
+                if self.drone.current_layer == 1 and APARTMENT2_FLOOR[map_y][map_x] == 1:
+                    print(f'up:  {depth}')
+                    if depth < 1:
+                        self.screen.blit(self.drone.warning_light_img, (10, 80))
+                        break
+                if self.drone.current_layer == 2 and CEILING2_MAP[map_y][map_x] == 1:
+                    if depth < 1:
+                        self.screen.blit(self.drone.warning_light_img, (10, 80))
+                        break
+        else:
+            angle_down = math.radians(self.drone.angle - 90)
+            for depth in range(1, 100):
+                target_x = self.drone.x + math.cos(angle_down) * depth
+                target_y = self.drone.y + math.sin(angle_down) * depth
+                map_x = int(target_x / self.map.scale)
+                map_y = int(target_y / self.map.scale)
+                if map_x < 0 or map_x > 20 or map_y > 20 or map_y < 0:
                     break
-        # Calculate risk downwards
-        angle_down = math.radians(self.drone.angle + self.sensor.up_down_sensors[1])
-        for depth in range(1, 200):
-            target_x = self.drone.x + math.cos(angle_down) * depth
-            target_y = self.drone.y + math.sin(angle_down) * depth
-            map_x = int(target_x / self.map.scale)
-            map_y = int(target_y / self.map.scale)
-            if map_x < 0 or map_x > 20 or map_y > 20 or map_y < 0:
-                break
-            if self.drone.current_layer == 1 and APARTMENT1_FLOOR[map_y][map_x] == 1:
-                if depth < 1:
-                    self.screen.blit(self.drone.warning_light_img, (10, 80))
-                    break
-            if self.drone.current_layer == 2 and APARTMENT2_FLOOR[map_y][map_x] == 1:
-                if depth < 1:
-                    self.screen.blit(self.drone.warning_light_img, (10, 80))
-                    break
+
+                if self.drone.current_layer == 1 and APARTMENT1_FLOOR[map_y][map_x] == 1:
+                    print(f'down:  {depth}')
+                    if depth < 1:
+                        self.screen.blit(self.drone.warning_light_img, (10, 80))
+                        break
+                if self.drone.current_layer == 2 and APARTMENT2_FLOOR[map_y][map_x] == 1:
+                    if depth < 1:
+                        self.screen.blit(self.drone.warning_light_img, (10, 80))
+                        break
 
     def autonomous_movement(self):
         """
@@ -251,13 +263,13 @@ class Game:
             # Determine movement based on sensor readings
             if sensor_readings:
                 self.drone.moving = False
-                self.drone.speed = 0
-                self.drone.return_home_speed.append(0)
+                self.drone.speed_down()
+                self.drone.return_home_speed.append(self.drone.speed)
                 min_sensor_dist = min(sensor_readings.values())
                 degree = 0
                 for sensor_angle in sensor_readings:
                     if sensor_readings[sensor_angle] == min_sensor_dist:
-                        degree = sensor_angle
+                        degree = sensor_angle.config
                 if degree < 0:  # Closer to left wall
                     self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 1)  # Rotate right
                 else:  # Closer to right wall
@@ -267,12 +279,12 @@ class Game:
                 self.drone.moving = True
 
             if self.drone.moving:
-                self.drone.speed = 2
+                self.drone.speed_up()
                 if self.drone.timing_change == 30:
                     self.drone.right_left *= -1
                     self.drone.timing_change = 0
                 self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 0.5 * self.drone.right_left)
-                self.drone.return_home_speed.append(2)
+                self.drone.return_home_speed.append(self.drone.speed)
                 self.drone.timing_change += 1
                 self.drone.angle = math.radians(self.drone.gyro_angle)
                 new_x = self.drone.x + math.cos(self.drone.angle) * self.drone.speed
@@ -374,17 +386,10 @@ class Game:
             self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 2)
             self.drone.spin_back += 2
             return
+        self.drone.gyro_angle = self.drone.return_home_angle.pop()
         pop_speed = self.drone.return_home_speed.pop()
         if pop_speed == 0:
             self.drone.speed = 0
-            self.drone.gyro_angle = self.drone.return_home_angle.pop()
-        elif pop_speed == 2:
-            self.drone.gyro_angle = self.drone.return_home_angle.pop()
-            self.drone.speed = 2
-            new_x = self.drone.x + math.cos(self.drone.angle) * self.drone.speed
-            new_y = self.drone.y + math.sin(self.drone.angle) * self.drone.speed
-            self.drone.x, self.drone.y = new_x, new_y
-            self.drone.current_point = (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale))
         elif pop_speed == -1:
             self.drone.speed = 0
             if self.drone.z <= 10:
@@ -402,6 +407,12 @@ class Game:
             self.drone.z = 1.5
             self.drone.current_map = APARTMENT2_WALLS
             self.drone.current_layer = 2
+        else:
+            self.drone.speed = pop_speed
+            new_x = self.drone.x + math.cos(self.drone.angle) * self.drone.speed
+            new_y = self.drone.y + math.sin(self.drone.angle) * self.drone.speed
+            self.drone.x, self.drone.y = new_x, new_y
+            self.drone.current_point = (int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale))
 
     def run(self):
         """
@@ -469,8 +480,7 @@ class Game:
 
             self.screen.fill((0, 0, 0))
             self.cast_rays()
-            self.sensor.draw(self.screen)
-            self.calculate_risky_up_down()
+            self.drone.draw_sensors(self.screen)
             self.calculate_risky()
             self.drone.draw(self.screen)
 
@@ -526,3 +536,14 @@ class Game:
             self.button_sensors.color = WHITE
 
         pygame.quit()
+
+from game import Game
+
+if __name__ == "__main__":
+    game = Game()
+    game.run()
+class Map:
+    def __init__(self):
+        self.width = 20
+        self.height = 20
+        self.scale = 64

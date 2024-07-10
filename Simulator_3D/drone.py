@@ -3,7 +3,7 @@ import math
 import pygame
 from world_params import SCREEN_WIDTH, SCREEN_HEIGHT, DRONE_PICTURE, WARNING_PICTURE
 from map import Map
-
+from sensor import Sensor
 class Point:
     def __init__(self, y, x):
         self.x = x
@@ -20,7 +20,7 @@ class Drone:
         self.angle = 0
         self.gyro_angle = 0
         self.pitch = 0
-        self.speed = 2
+        self.speed = 0
         self.map = Map()
         self.moving = False
         self.right_left = 1
@@ -35,11 +35,28 @@ class Drone:
         self.visited_positions_1 = set()
         self.visited_positions_2 = set()
         self.current_map = []
+        self.current_sensor = 0
         self.points_1 = [Point(self.y, self.x)]
         self.points_2 = None
         self.scaled_points_1 = [(int(self.y / self.map.scale), int(self.x / self.map.scale))]
         self.scaled_points_2 = None
+        self.sensors =[
+            [Sensor(-90),Sensor(-45),Sensor(0),Sensor(45), Sensor(90),Sensor(90,True), Sensor(-90, False)],
+            [Sensor(-90), Sensor(-70), Sensor(-45),  Sensor(0), Sensor(45), Sensor(70), Sensor(90), Sensor(90, True), Sensor(-90, False)],
+            [Sensor(-135), Sensor(-90), Sensor(-45), Sensor(0), Sensor(45), Sensor(90), Sensor(135), Sensor(90, True),
+             Sensor(-90, False)],
 
+        ]
+
+    def draw_sensors(self, screen):
+        for sensor in self.sensors[self.current_sensor]:
+            sensor.draw(self, screen)
+    def speed_up(self):
+        if self.speed != 4:
+            self.speed += 1
+    def speed_down(self):
+        if self.speed != 0:
+            self.speed -= 1
     def update_points(self, layer):
         if layer == 1:
             last_point = self.points_1[-1]
@@ -110,3 +127,10 @@ class Drone:
     """
         rotated_drone, rotated_rect = self.rotate_image(self.gyro_angle)
         screen.blit(rotated_drone, rotated_rect.topleft)
+
+    # Add this method to apply movement based on the yaw angle
+    def move_yaw(self):
+        self.angle = math.radians(self.gyro_angle)
+        new_x = self.x + math.cos(self.angle) * self.speed
+        new_y = self.y + math.sin(self.angle) * self.speed
+        self.x, self.y = new_x, new_y
