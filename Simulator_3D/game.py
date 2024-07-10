@@ -140,7 +140,7 @@ class Game:
                     self.calculate_risky_up_down(False)
             else:
                 angle = math.radians(self.drone.gyro_angle + sensor_angle.config)
-                for depth in range(1, 1000):
+                for depth in range(1, 50):
                     target_x = self.drone.x + math.cos(angle) * depth
                     target_y = self.drone.y + math.sin(angle) * depth
                     map_x = int(target_x / self.map.scale)
@@ -196,7 +196,7 @@ angle
         # Calculate risk upwards
         if is_up:
             angle_up = math.radians(self.drone.angle + 90)
-            for depth in range(1, 1000):
+            for depth in range(1, 100):
                 target_x = self.drone.x + math.cos(angle_up) * depth
                 target_y = self.drone.y + math.sin(angle_up) * depth
                 map_x = int(target_x / self.map.scale)
@@ -214,7 +214,7 @@ angle
                         break
         else:
             angle_down = math.radians(self.drone.angle - 90)
-            for depth in range(1, 100):
+            for depth in range(1, 50):
                 target_x = self.drone.x + math.cos(angle_down) * depth
                 target_y = self.drone.y + math.sin(angle_down) * depth
                 map_x = int(target_x / self.map.scale)
@@ -438,9 +438,10 @@ angle
         Returns:
         None
         """
-        MINIMAP_SCALE = 4
-        MINIMAP_OFFSET_X = SCREEN_WIDTH - self.map.width * MINIMAP_SCALE - 10
-        MINIMAP_OFFSET_Y = 10
+
+        MINIMAP_SCALE = 8  # Increase the scaling factor to make the minimap larger
+        MINIMAP_OFFSET_X = SCREEN_WIDTH - self.map.width * MINIMAP_SCALE - 20  # Adjust the offset to accommodate the new scale
+        MINIMAP_OFFSET_Y = 20
 
         while self.running:
             for event in pygame.event.get():
@@ -449,7 +450,7 @@ angle
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_x, mouse_y = event.pos
                     if self.button_sensors.rect.collidepoint(mouse_x, mouse_y):
-                        self.sensor.current_config = (self.sensor.current_config + 1) % len(self.sensor.configs)
+                        self.drone.current_sensor = (self.drone.current_sensor + 1) % len(self.drone.sensors[self.drone.current_sensor] )
                         self.button_sensors.color = GRAY
                     if self.button_ai.rect.collidepoint(mouse_x, mouse_y):
                         self.do_ai = True
@@ -518,7 +519,7 @@ angle
                         MINIMAP_SCALE))
 
             pygame.draw.rect(self.screen, (255, 255, 255), (
-                MINIMAP_OFFSET_X - 105, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,
+                MINIMAP_OFFSET_X - 205, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,
                 self.map.height * MINIMAP_SCALE + 10), 2)
             for y in range(20):
                 for x in range(20):
@@ -528,14 +529,18 @@ angle
                     if (y, x) == self.drone.current_point:
                         color = RED
                     pygame.draw.rect(self.screen, color, (
-                        MINIMAP_OFFSET_X - 100 + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,
+                        MINIMAP_OFFSET_X - 200 + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE,
+                        MINIMAP_SCALE,
                         MINIMAP_SCALE))
+
+            self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X, MINIMAP_OFFSET_Y, MINIMAP_SCALE)
 
             pygame.display.flip()
             self.clock.tick(30)
             self.button_sensors.color = WHITE
 
         pygame.quit()
+
 
 from game import Game
 

@@ -23,11 +23,11 @@ class Sensor:
     """
 
     def __init__(self, confing, is_up_down=None):
-
+        self.font = pygame.font.SysFont(None, 24)  # Initialize font
         self.is_up_down = is_up_down
-        self.up_down_sensors = [90, -90]
         self.config = confing
         self.distance = 0
+
 
     def draw(self, drone, screen):
         """
@@ -43,8 +43,8 @@ class Sensor:
         None
         """
         if self.is_up_down is None:
-            angle = math.radians(drone.gyro_angle + self.config)
-            for depth in range(1, 1000):
+            angle = math.radians(drone.gyro_angle + self.config + 90)
+            for depth in range(1, 800):
                 target_x = drone.x + math.cos(angle) * depth
                 target_y = drone.y + math.sin(angle) * depth
                 map_x = int(target_x / 64)
@@ -59,42 +59,61 @@ class Sensor:
                                      (SCREEN_WIDTH // 2 + math.cos(angle) * depth,
                                       SCREEN_HEIGHT // 2 + math.sin(angle) * depth),
                                      1)
+                    if depth <= drone.dangerous_distance:
+                        text = self.font.render(str(depth), True, (255, 255, 255))
+                        screen.blit(text, (SCREEN_WIDTH // 2 + math.cos(angle) * depth,
+                                           SCREEN_HEIGHT // 2 + math.sin(angle) * depth))
                     break
             return
         if self.is_up_down:
             # Draw up and down sensors
             angle_up = math.radians(drone.angle + self.config)
-            for depth in range(1, 1000):
+            for depth in range(1, 800):
                 target_x = drone.x + math.cos(angle_up) * depth
                 target_y = drone.y + math.sin(angle_up) * depth
                 map_x = int(target_x / 64)
                 map_y = int(target_y / 64)
                 if drone.current_layer == 1 and APARTMENT2_FLOOR[map_y][map_x] == 1:
+                    self.distance = depth
                     pygame.draw.line(screen, (0, 255, 0), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
                                      (SCREEN_WIDTH // 2 + math.cos(angle_up) * depth,
                                       SCREEN_HEIGHT // 2 + math.sin(angle_up) * depth), 1)
                     break
                 if drone.current_layer == 2 and CEILING2_MAP[map_y][map_x] == 1:
+                    self.distance = depth
                     pygame.draw.line(screen, (0, 255, 0), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
                                      (SCREEN_WIDTH // 2 + math.cos(angle_up) * depth,
                                       SCREEN_HEIGHT // 2 + math.sin(angle_up) * depth), 1)
+                    if depth <= drone.dangerous_distance:
+
+                        text = self.font.render(str(depth), True, (255, 255, 255))
+                        screen.blit(text, (SCREEN_WIDTH // 2 + math.cos(angle_up) * depth,
+                                           SCREEN_HEIGHT // 2 + math.sin(angle_up) * depth))
                     break
             return
         if not self.is_up_down:
-            angle_down = math.radians(drone.angle + self.up_down_sensors[0])
-            for depth in range(1, 1000):
+            angle_down = math.radians(drone.angle + self.config)
+            for depth in range(1, 800):
                 target_x = drone.x + math.cos(angle_down) * depth
                 target_y = drone.y + math.sin(angle_down) * depth
                 map_x = int(target_x / 64)
                 map_y = int(target_y / 64)
                 if drone.current_layer == 1 and APARTMENT1_FLOOR[map_y][map_x] == 1:
+                    self.distance = depth
                     pygame.draw.line(screen, (0, 255, 0), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
                                      (SCREEN_WIDTH // 2 + math.cos(angle_down) * depth,
                                       SCREEN_HEIGHT // 2 + math.sin(angle_down) * depth), 1)
                     break
                 if drone.current_layer == 2 and APARTMENT2_FLOOR[map_y][map_x] == 1:
+                    self.distance = depth
                     pygame.draw.line(screen, (0, 255, 0), (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
                                      (SCREEN_WIDTH // 2 + math.cos(angle_down) * depth,
                                       SCREEN_HEIGHT // 2 + math.sin(angle_down) * depth), 1)
+                    if depth <= drone.dangerous_distance:
+
+                        # Draw the distance text
+                        text = self.font.render(str(depth), True, (255, 255, 255))
+                        screen.blit(text, (SCREEN_WIDTH // 2 + math.cos(angle_down) * depth,
+                                           SCREEN_HEIGHT // 2 + math.sin(angle_down) * depth))
                     break
             return
