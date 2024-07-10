@@ -45,13 +45,12 @@ class Drone:
         self.scaled_points_1 = [(int(self.y / self.map.scale), int(self.x / self.map.scale))]
         self.scaled_points_2 = None
         self.sensors =[
-            [Sensor(-90),Sensor(-45),Sensor(0),Sensor(45), Sensor(90),Sensor(90,True), Sensor(-90, False)],
-            [Sensor(-90), Sensor(-70), Sensor(-45),  Sensor(0), Sensor(45), Sensor(70), Sensor(90), Sensor(90, True), Sensor(-90, False)],
-            [Sensor(-135), Sensor(-90), Sensor(-45), Sensor(0), Sensor(45), Sensor(90), Sensor(135), Sensor(90, True),
-             Sensor(-90, False)],
+            [Sensor(-90, 0),Sensor(-45, 0),Sensor(0,0),Sensor(45, 0), Sensor(90, 0),Sensor(90,1), Sensor(-90, 2)],
+            [Sensor(-90, 0), Sensor(-70, 0), Sensor(-45, 0),  Sensor(0), Sensor(45, 0), Sensor(70, 0), Sensor(90, 0), Sensor(90, 1), Sensor(-90, 2)],
+            [Sensor(-135, 0), Sensor(-90, 0), Sensor(-45, 0), Sensor(0, 0), Sensor(45, 0), Sensor(90, 0), Sensor(135, 0), Sensor(90, 1),
+             Sensor(-90, 2)],
 
         ]
-
     def draw_sensor_lines(self, screen, minimap_offset_x, minimap_offset_y, minimap_scale):
         """
         Draw sensor lines and distances.
@@ -88,14 +87,11 @@ class Drone:
                 if current_map[map_y][map_x] == 1:
                     # Draw the sensor line
 
-                    if sensor_angle.is_up_down:
+                    if sensor_angle.is_up_down == 1 or sensor_angle.is_up_down == 2:
                         color = (0, 255, 0)
 
-                    elif not sensor_angle.is_up_down:
-                        color = (0, 0, 255)
                     else:
-                        color = (0, 255, 0)
-
+                        color = (0, 0, 255)
                     # Draw the sensor line on the minimap
                     pygame.draw.line(screen, color,
                                      (minimap_offset_x + self.x // self.map.scale * minimap_scale,
@@ -184,9 +180,3 @@ class Drone:
         rotated_drone, rotated_rect = self.rotate_image(self.gyro_angle)
         screen.blit(rotated_drone, rotated_rect.topleft)
 
-    # Add this method to apply movement based on the yaw angle
-    def move_yaw(self):
-        self.angle = math.radians(self.gyro_angle)
-        new_x = self.x + math.cos(self.angle) * self.speed
-        new_y = self.y + math.sin(self.angle) * self.speed
-        self.x, self.y = new_x, new_y

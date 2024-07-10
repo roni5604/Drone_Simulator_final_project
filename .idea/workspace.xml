@@ -5,8 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="72cd5d53-2bbd-481d-a092-1f23edf2a36f" name="Changes" comment="upgrade snsor">
-      <change beforePath="$PROJECT_DIR$/.idea/Drone_simulator.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Drone_simulator.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Simulator_3D/drone.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_3D/drone.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Simulator_3D/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/Simulator_3D/game.py" afterDir="false" />
@@ -232,7 +230,7 @@
       <workItem from="1720549538460" duration="311000" />
       <workItem from="1720609313853" duration="10045000" />
       <workItem from="1720624187897" duration="895000" />
-      <workItem from="1720625148349" duration="2091000" />
+      <workItem from="1720625148349" duration="4767000" />
     </task>
     <task id="LOCAL-00001" summary="Ordered form for ai">
       <created>1720206606372</created>
@@ -358,7 +356,15 @@
       <option name="project" value="LOCAL" />
       <updated>1720622910992</updated>
     </task>
-    <option name="localTasksCounter" value="17" />
+    <task id="LOCAL-00017" summary="upgrade snsor">
+      <option name="closed" value="true" />
+      <created>1720627463387</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1720627463387</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -393,7 +399,7 @@
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$Graph.coverage" NAME="Graph Coverage Results" MODIFIED="1720189553375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$SimulationWindow.coverage" NAME="SimulationWindow Coverage Results" MODIFIED="1720518334249" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Drone_Simulator_final_project$sensor.coverage" NAME="sensor Coverage Results" MODIFIED="1720625321768" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Simulator_3D" />
-    <SUITE FILE_PATH="coverage/Drone_Simulator_final_project$main.coverage" NAME="main Coverage Results" MODIFIED="1720627182036" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Simulator_3D" />
+    <SUITE FILE_PATH="coverage/Drone_Simulator_final_project$main.coverage" NAME="main Coverage Results" MODIFIED="1720629914962" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Simulator_3D" />
     <SUITE FILE_PATH="coverage/Drone_simulator_final_project$AutoAlgo1.coverage" NAME="AutoAlgo1 Coverage Results" MODIFIED="1720202279994" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

@@ -22,7 +22,7 @@ class Sensor:
     None
     """
 
-    def __init__(self, confing, is_up_down=None):
+    def __init__(self, confing, is_up_down=0):
         self.font = pygame.font.SysFont(None, 24)  # Initialize font
         self.is_up_down = is_up_down
         self.config = confing
@@ -42,7 +42,7 @@ class Sensor:
         Returns:
         None
         """
-        if self.is_up_down is None:
+        if self.is_up_down == 0:
             angle = math.radians(drone.gyro_angle + self.config + 90)
             for depth in range(1, 800):
                 target_x = drone.x + math.cos(angle) * depth
@@ -65,7 +65,7 @@ class Sensor:
                                            SCREEN_HEIGHT // 2 + math.sin(angle) * depth))
                     break
             return
-        if self.is_up_down:
+        if self.is_up_down == 1:
             # Draw up and down sensors
             angle_up = math.radians(drone.angle + self.config)
             for depth in range(1, 800):
@@ -91,7 +91,7 @@ class Sensor:
                                            SCREEN_HEIGHT // 2 + math.sin(angle_up) * depth))
                     break
             return
-        if not self.is_up_down:
+        if not self.is_up_down == 2:
             angle_down = math.radians(drone.angle + self.config)
             for depth in range(1, 800):
                 target_x = drone.x + math.cos(angle_down) * depth

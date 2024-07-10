@@ -1,4 +1,3 @@
-
 import pygame
 import math
 import random
@@ -8,6 +7,7 @@ from map import Map
 from button import Button
 from world_params import *
 from battery import Battery
+
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (128, 128, 128)
@@ -17,61 +17,27 @@ GREEN = (0, 255, 0)
 BROWN = (101, 67, 33)
 
 class Game:
-    def __init__(self): # Initialize the game
-        pygame.init() # Initialize pygame
-        pygame.font.init() # Initialize pygame font
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) # Set the screen size
-        pygame.display.set_caption("3D Drone Simulation") # Set the title of the window
+    def __init__(self):  # Initialize the game
+        pygame.init()  # Initialize pygame
+        pygame.font.init()  # Initialize pygame font
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))  # Set the screen size
+        pygame.display.set_caption("3D Drone Simulation")  # Set the title of the window
         self.battery = Battery()
-        self.clock = pygame.time.Clock() # Initialize the clock
-        self.running = True # Set the game to running
-        self.drone = Drone() # Create the drone
-        self.map = Map() # Create the map
-        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 950, SCREEN_HEIGHT - 55, 200, 50) # Create the
-        # self-driving button
-        self.button_return = Button('Return Home', SCREEN_WIDTH - 700, SCREEN_HEIGHT - 55, 200, 50) # Create the
-        # return home button
-        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 55, 200, 50) # Create the
-        self.button_charge = Button('Charge', SCREEN_WIDTH - 450, SCREEN_HEIGHT - 55, 200, 50)
-        self.do_ai = False # Set the self-driving mode to False
-        self.do_return = False # Set the return home mode to False
-
+        self.clock = pygame.time.Clock()  # Initialize the clock
+        self.running = True  # Set the game to running
+        self.drone = Drone()  # Create the drone
+        self.map = Map()  # Create the map
+        self.button_ai = Button('Self-Driver', SCREEN_WIDTH - 950, SCREEN_HEIGHT - 55, 200, 50)  # Create the self-driving button
+        self.button_return = Button('Return Home', SCREEN_WIDTH - 700, SCREEN_HEIGHT - 55, 200, 50)  # Create the return home button
+        self.button_sensors = Button('Switch Sensors', SCREEN_WIDTH - 200, SCREEN_HEIGHT - 55, 200, 50)  # Create the switch sensors button
+        self.button_charge = Button('Charge', SCREEN_WIDTH - 450, SCREEN_HEIGHT - 55, 200, 50)  # Create the charge button
+        self.do_ai = False  # Set the self-driving mode to False
+        self.do_return = False  # Set the return home mode to False
 
     def cast_rays(self):
         """
         Simulates ray casting from the drone's perspective to create a 3D-like view.
-
-        This function casts 120 rays in a fan shape starting from the drone's current angle minus 30 degrees to the drone's
-        current angle plus 30 degrees. Each ray is incremented by 1 degree. For each ray, it calculates the intersection
-        point with the walls in the current layer of the map. If a wall is hit, it calculates the height of the wall and
-        the ceiling based on the distance and draws them on the screen.
-
-        The function performs the following steps:
-        1. Initialize the starting angle for the field of view.
-        2. Loop through each ray and increment the angle by 1 degree.
-        3. For each depth (distance from the drone), calculate the target coordinates.
-        4. Convert the target coordinates to map coordinates.
-        5. Check which layer the drone is currently on and set the corresponding map.
-        6. Check if the ray intersects a wall at the current depth.
-        7. If a wall is hit, calculate the height of the wall and ceiling based on the depth.
-        8. Draw the wall and ceiling on the screen with the appropriate color.
-        9. Break the depth loop when a wall is hit to move to the next ray.
-
-        Variables:
-        - ray_angle: The current angle of the ray being cast.
-        - target_x: The x-coordinate of the point where the ray hits.
-        - target_y: The y-coordinate of the point where the ray hits.
-        - map_x: The x-coordinate in the map corresponding to the target_x.
-        - map_y: The y-coordinate in the map corresponding to the target_y.
-        - current_map: The map layer the drone is currently on.
-        - color: The color of the wall to be drawn (brown for layer 1, gray for layer 2).
-        - wall_height: The height of the wall to be drawn, inversely proportional to the depth.
-        - ceiling_height: The height of the ceiling to be drawn, inversely proportional to the depth.
-
-        Returns:
-        None
         """
-
         current_map = []
         ray_angle = self.drone.angle - math.pi / 6  # Start angle for the field of view
         for ray in range(120):
@@ -101,42 +67,13 @@ class Game:
     def calculate_risky(self):
         """
         Determines risky directions based on the drone's sensor data.
-
-        This function calculates the risk of collision in different directions based on the drone's sensor configuration.
-        It checks the distance from the drone to obstacles (walls) in the map. If an obstacle is detected within a
-        dangerous distance, the function marks that direction as risky.
-
-        The function performs the following steps:
-        1. Retrieve the current sensor configuration angles.
-        2. Loop through each sensor angle.
-        3. Convert the sensor angle to radians and add it to the drone's current gyro angle.
-        4. For each depth (distance from the drone), calculate the target coordinates.
-        5. Convert the target coordinates to map coordinates.
-        6. Check which layer the drone is currently on and set the corresponding map.
-        7. Check if the sensor ray intersects a wall at the current depth.
-        8. If a wall is hit within the dangerous distance, mark the direction as risky and display a warning light.
-        9. Break the depth loop when a wall is hit to move to the next sensor angle.
-
-        Variables:
-        - sensor_angles: List of angles from the current sensor configuration.
-        - sensor_risky: Dictionary to store risky directions and their corresponding depths.
-        - angle: The current angle of the sensor ray being cast.
-        - target_x: The x-coordinate of the point where the sensor ray hits.
-        - target_y: The y-coordinate of the point where the sensor ray hits.
-        - map_x: The x-coordinate in the map corresponding to the target_x.
-        - map_y: The y-coordinate in the map corresponding to the target_y.
-        - current_map: The map layer the drone is currently on.
-
-        Returns:
-        - sensor_risky: Dictionary with sensor angles as keys and depths as values for risky directions.
         """
         sensor_angles = self.drone.sensors[self.drone.current_sensor]
         sensor_risky = {}
         for sensor_angle in sensor_angles:
-            if sensor_angle.is_up_down is not None:
-                if sensor_angle.is_up_down:
+            if sensor_angle.is_up_down == 1:
                     self.calculate_risky_up_down(True)
-                else:
+            elif sensor_angle.is_up_down == 2:
                     self.calculate_risky_up_down(False)
             else:
                 angle = math.radians(self.drone.gyro_angle + sensor_angle.config)
@@ -155,7 +92,7 @@ class Game:
                     if current_map[map_y][map_x] == 1:
                         print(f'{sensor_angle}:  {depth}')
                         if depth < self.drone.dangerous_distance:
-                            sensor_angle.distance= depth
+                            sensor_angle.distance = depth
                             sensor_risky[sensor_angle] = depth
                             self.screen.blit(self.drone.warning_light_img, (10, 80))
                         break
@@ -164,36 +101,7 @@ class Game:
     def calculate_risky_up_down(self, is_up):
         """
         Determines risky directions based on the drone's sensor data.
-
-        This function calculates the risk of collision in different directions based on the drone's sensor configuration.
-        It checks the distance from the drone to obstacles (walls) in the map. If an obstacle is detected within a
-        dangerous distance, the function marks that direction as risky.
-
-        The function performs the following steps:
-        1. Retrieve the current sensor configuration angles.
-        2. Loop through each sensor angle.
-        3. Convert the sensor angle to radians and add it to the drone's current gyro angle.
-        4. For each depth (distance from the drone), calculate the target coordinates.
-        5. Convert the target coordinates to map coordinates.
-        6. Check which layer the drone is currently on and set the corresponding map.
-        7. Check if the sensor ray intersects a wall at the current depth.
-        8. If a wall is hit within the dangerous distance, mark the direction as risky and display a warning light.
-        9. Break the depth loop when a wall is hit to move to the next sensor angle.
-
-        Variables:
-        - sensor_angles: List of angles from the current sensor configuration.
-        - sensor_risky: Dictionary to store risky directions and their corresponding depths.
-        - angle: The current angle of the sensor ray being cast.
-        - target_x: The x-coordinate of the point where the sensor ray hits.
-        - target_y: The y-coordinate of the point where the sensor ray hits.
-        - map_x: The x-coordinate in the map corresponding to the target_x.
-        - map_y: The y-coordinate in the map corresponding to the target_y.
-        - current_map: The map layer the drone is currently on.
-angle
-        Returns:
-        - sensor_risky: Dictionary with sensor angles as keys and depths as values for risky directions.
         """
-        # Calculate risk upwards
         if is_up:
             angle_up = math.radians(self.drone.angle + 90)
             for depth in range(1, 100):
@@ -235,32 +143,11 @@ angle
     def autonomous_movement(self):
         """
         Controls the autonomous movement of the drone.
-
-        This function determines and executes the movement of the drone based on sensor readings and predefined behaviors.
-        It adjusts the drone's direction and speed to avoid obstacles and navigates between different layers of the environment.
-
-        The function performs the following steps:
-        1. Checks if autonomous movement is enabled.
-        2. If the drone is not moving between floors, calculates risky directions using sensor readings.
-        3. Adjusts the drone's movement based on the sensor readings to avoid obstacles.
-        4. Controls the drone's movement in the current layer, including speed and direction adjustments.
-        5. Handles autonomous movement between floors, adjusting the drone's vertical position and layer.
-
-        Variables:
-        - sensor_readings: Dictionary of sensor angles and corresponding depths indicating obstacles.
-        - min_sensor_dist: Minimum distance to an obstacle detected by the sensors.
-        - degree: Angle of the sensor detecting the closest obstacle.
-        - new_x: The new x-coordinate of the drone after moving.
-        - new_y: The new y-coordinate of the drone after moving.
-
-        Returns:
-        None
         """
         if not self.do_ai:
             return
         if not self.drone.move_floor:
             sensor_readings = self.calculate_risky()
-            # Determine movement based on sensor readings
             if sensor_readings:
                 self.drone.moving = False
                 self.drone.speed_down()
@@ -303,7 +190,6 @@ angle
                     elif self.drone.current_layer == 2:
                         self.drone.update_points(2)
                         self.drone.visited_positions_2.add((int(self.drone.y / self.map.scale), int(self.drone.x / self.map.scale)))
-        # Autonomous height movement
         if self.drone.move_floor or random.random() < 0.003:
             if self.drone.current_layer == 1:
                 if APARTMENT2_FLOOR[int(self.drone.y / self.map.scale)][int(self.drone.x / self.map.scale)] == 2 and random.random() < 0.5:
@@ -328,14 +214,12 @@ angle
                     self.drone.move_floor = True
                     if self.drone.z <= 10:
                         self.drone.return_home_speed.append(-3)
-
                         self.drone.z += 0.5
                     else:
                         self.drone.return_home_speed.append(-4)
                         self.drone.z = -1.5
                         self.drone.current_layer = 1
                         self.drone.update_points(1)
-
                         self.drone.move_floor = False
                         self.drone.moving = True
         if self.drone.gyro_angle >= 180:
@@ -346,28 +230,10 @@ angle
     def return_home_movement(self):
         """
         Controls the drone's movement to return to its starting point.
-
-        This function handles the autonomous return of the drone to its starting point based on previously recorded
-        angles and speeds. It adjusts the drone's direction, speed, and height to navigate back to its home position.
-
-        The function performs the following steps:
-        1. Checks if the return-to-home mode is enabled.
-        2. If there are no recorded return angles or speeds, stops the drone and exits return-to-home mode.
-        3. Rotates the drone back to its original orientation if it has spun less than 180 degrees.
-        4. Adjusts the drone's movement based on the recorded return speed and angle.
-
-        Variables:
-        - pop_speed: The last recorded speed from the return home speed list.
-        - new_x: The new x-coordinate of the drone after moving.
-        - new_y: The new y-coordinate of the drone after moving.
-
-        Returns:
-        None
         """
         if not self.do_return:
             return
         if not self.drone.return_home_angle or not self.drone.return_home_speed:
-
             if self.drone.spin_back > 0:
                 self.drone.speed = 0
                 self.drone.gyro_angle = self.drone.format_rotation(self.drone.gyro_angle + 2)
@@ -450,7 +316,7 @@ angle
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_x, mouse_y = event.pos
                     if self.button_sensors.rect.collidepoint(mouse_x, mouse_y):
-                        self.drone.current_sensor = (self.drone.current_sensor + 1) % len(self.drone.sensors[self.drone.current_sensor] )
+                        self.sensor.current_config = (self.sensor.current_config + 1) % len(self.sensor.configs)
                         self.button_sensors.color = GRAY
                     if self.button_ai.rect.collidepoint(mouse_x, mouse_y):
                         self.do_ai = True
@@ -492,6 +358,7 @@ angle
             # Draw the battery
             self.battery.draw(self.screen)
 
+            # Draw the main minimap
             pygame.draw.rect(self.screen, (255, 255, 255), (
                 MINIMAP_OFFSET_X - 5, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,
                 self.map.height * MINIMAP_SCALE + 10), 2)
@@ -518,6 +385,8 @@ angle
                         MINIMAP_OFFSET_X + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,
                         MINIMAP_SCALE))
 
+
+            # Draw the secondary minimap
             pygame.draw.rect(self.screen, (255, 255, 255), (
                 MINIMAP_OFFSET_X - 205, MINIMAP_OFFSET_Y - 5, self.map.width * MINIMAP_SCALE + 10,
                 self.map.height * MINIMAP_SCALE + 10), 2)
@@ -529,26 +398,17 @@ angle
                     if (y, x) == self.drone.current_point:
                         color = RED
                     pygame.draw.rect(self.screen, color, (
-                        MINIMAP_OFFSET_X - 200 + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE,
-                        MINIMAP_SCALE,
+                        MINIMAP_OFFSET_X - 200 + x * MINIMAP_SCALE, MINIMAP_OFFSET_Y + y * MINIMAP_SCALE, MINIMAP_SCALE,
                         MINIMAP_SCALE))
 
-            self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X, MINIMAP_OFFSET_Y, MINIMAP_SCALE)
+            # Draw sensor lines on the secondary minimap
+            self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X - 200, MINIMAP_OFFSET_Y,
+                                          MINIMAP_SCALE)
+            self.drone.draw_sensor_lines(self.screen, MINIMAP_OFFSET_X, MINIMAP_OFFSET_Y,
+                                         MINIMAP_SCALE)
 
             pygame.display.flip()
             self.clock.tick(30)
             self.button_sensors.color = WHITE
 
         pygame.quit()
-
-
-from game import Game
-
-if __name__ == "__main__":
-    game = Game()
-    game.run()
-class Map:
-    def __init__(self):
-        self.width = 20
-        self.height = 20
-        self.scale = 64
