@@ -381,6 +381,10 @@ your system. You can install Pygame using pip:
 - **Autonomous Navigation**: The drone can autonomously navigate through the map, avoiding obstacles and reaching its destination.
 - **Return Home Functionality**: The drone can return to its starting position automatically, ensuring a safe and efficient return.
 
+## Final Design Additions We Made
+
+- **User Interface Enhancements**: Improve the UI to make it more intuitive and user-friendly, allowing users to interact with the simulation more effectively, For example, add dots on the walls with the distances from the drone sensors.
+- **Movement outputs**: Add a text (in terminal) output that shows the drone's movement in real-time, providing additional feedback to the user.
 
 ## Future Improvements
 - **3D Visualization**: Enhance the visualization to represent a more realistic 3D environment, improving the user experience.
